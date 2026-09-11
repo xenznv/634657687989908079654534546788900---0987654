@@ -77,7 +77,7 @@ bool_flag(
 
 bool_flag(
     name = "disableProvisioningProfiles",
-    build_setting_default = True,
+    build_setting_default = False,
     visibility = ["//visibility:public"],
 )
 
