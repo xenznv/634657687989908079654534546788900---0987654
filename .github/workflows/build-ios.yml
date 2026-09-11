@@ -1,0 +1,161 @@
+name: ios-build
+
+# Builds an unsigned iOS app IPA. This checkout is already prepared:
+# the build therefore runs a guard check (zero unwanted identifiers allowed)
+# instead of a strip step.
+#
+# The unsigned IPA is signed later on Windows via AltStore/SideStore/TrollStore.
+#
+# Run from the Actions tab ("Run workflow"). First run takes 1.5-3 h;
+# later runs are much faster thanks to the bazel disk cache.
+
+on:
+  workflow_dispatch:
+    inputs:
+      configuration:
+        description: 'Build configuration'
+        type: choice
+        default: release_arm64
+        options:
+          - release_arm64
+          - release_sim_arm64
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Unsigned IPA (${{ inputs.configuration || 'release_arm64' }})
+    runs-on: macos-15
+    timeout-minutes: 300
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read pinned toolchain versions (versions.json)
+        id: versions
+        run: |
+          echo "xcode=$(node -e "console.log(require('./versions.json').xcode)")" >> "$GITHUB_OUTPUT"
+          echo "bazel=$(node -e "console.log(require('./versions.json').bazel.split(':')[0])")" >> "$GITHUB_OUTPUT"
+
+      - name: Verify no unwanted identifiers in sources
+        run: |
+          HITS=$(grep -r -l -E "JerkgramTelemetry|jerkgram\.telemetry|telemetryToggle|workers\.dev|anonymousAnalytics" \
+            --include="*.swift" --include="*.m" --include="*.h" --include="*.c" --include="*.cpp" \
+            submodules Telegram 2>/dev/null || true)
+          if [ -n "$HITS" ]; then
+            echo "::error::Unwanted identifiers found in sources:"
+            echo "$HITS"
+            exit 1
+          fi
+          echo "OK: sources contain no unwanted identifiers."
+
+      - name: Select Xcode ${{ steps.versions.outputs.xcode }}
+        run: |
+          ls /Applications | grep -i xcode || true
+          XCODE_PATH="$(ls -d /Applications/Xcode*${{ steps.versions.outputs.xcode }}* 2>/dev/null | sort | tail -1)"
+          if [ -n "$XCODE_PATH" ]; then
+            echo "Found pinned Xcode: $XCODE_PATH"
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          else
+            echo "::warning::Pinned Xcode ${{ steps.versions.outputs.xcode }} not on this image;"
+            echo "::warning::falling back to the default Xcode with --overrideXcodeVersion."
+            echo "::warning::If compilation fails due to SDK mismatch, pin Xcode 26.2 via maxim-lobanov/setup-xcode@v1."
+          fi
+          xcodebuild -version
+          xcode-select -p
+
+      - name: Install pinned bazel ${{ steps.versions.outputs.bazel }}
+        run: |
+          case "$(uname -m)" in
+            arm64|aarch64) BARCH=arm64 ;;
+            *) BARCH=x86_64 ;;
+          esac
+          curl -fsSL -o /usr/local/bin/bazel \
+            "https://github.com/bazelbuild/bazel/releases/download/${{ steps.versions.outputs.bazel }}/bazel-${{ steps.versions.outputs.bazel }}-darwin-${BARCH}"
+          chmod +x /usr/local/bin/bazel
+          bazel --version
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf "/Applications/Xcode_15.4.app" "/Applications/Xcode_16.app" 2>/dev/null || true
+          brew uninstall --cask --force google-chrome microsoft-edge 2>/dev/null || true
+          rm -rf ~/Library/Caches/* 2>/dev/null || true
+          df -h /
+
+      - name: Restore bazel cache
+        uses: actions/cache/restore@v4
+        with:
+          path: bazel-cache
+          key: bazel-cache-macos-${{ steps.versions.outputs.bazel }}-${{ github.run_id }}
+          restore-keys: bazel-cache-macos-${{ steps.versions.outputs.bazel }}-
+
+      - name: Prepare build configuration from secrets
+        env:
+          JKG_API_ID: ${{ secrets.JKG_API_ID }}
+          JKG_API_HASH: ${{ secrets.JKG_API_HASH }}
+        run: |
+          if [ -z "$JKG_API_ID" ] || [ -z "$JKG_API_HASH" ]; then
+            echo "::error::Missing secrets JKG_API_ID / JKG_API_HASH."
+            echo "Add them in repo Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          mkdir -p build-input
+          python3 - <<'PYEOF'
+          import json, os
+          cfg = {
+              "bundle_id": "org.iosbuild.clean.app",
+              "api_id": os.environ["JKG_API_ID"],
+              "api_hash": os.environ["JKG_API_HASH"],
+              "team_id": "UNSET",
+              "app_center_id": "0",
+              "is_internal_build": "true",
+              "is_appstore_build": "false",
+              "appstore_id": "0",
+              "app_specific_url_scheme": "jkg",
+              "premium_iap_product_id": "",
+              "enable_siri": False,
+              "enable_icloud": False
+          }
+          with open('build-input/ci-configuration.json', 'w') as f:
+              json.dump(cfg, f, indent='\t')
+          print('Configuration written: api_id =', cfg["api_id"][:3] + '***')
+          PYEOF
+
+      - name: Build (unsigned)
+        run: |
+          mkdir -p build/artifacts
+          python3 -u build-system/Make/Make.py \
+            --overrideXcodeVersion \
+            --cacheDir "$(pwd)/bazel-cache" \
+            build \
+            --configurationPath build-input/ci-configuration.json \
+            --xcodeManagedCodesigning \
+            --buildNumber 139 \
+            --configuration "${{ inputs.configuration || 'release_arm64' }}" \
+            --outputBuildArtifactsPath build/artifacts
+
+      - name: Rename unsigned IPA and hash it
+        run: |
+          mv build/artifacts/Telegram.ipa build/artifacts/app-unsigned.ipa
+          shasum -a 256 build/artifacts/app-unsigned.ipa | tee build/artifacts/SHA256SUMS.txt
+          ls -la build/artifacts
+
+      - name: Save bazel cache for future runs
+        uses: actions/cache/save@v4
+        continue-on-error: true
+        with:
+          path: bazel-cache
+          key: bazel-cache-macos-${{ steps.versions.outputs.bazel }}-${{ github.run_id }}
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-unsigned-ipa
+          path: |
+            build/artifacts/app-unsigned.ipa
+            build/artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
