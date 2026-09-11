@@ -443,7 +443,7 @@ bundle ID of the application and `$(AppIdentifierPrefix)` with the value of the
 """,
             ),
             "entitlements_validation": attr.string(
-                default = entitlements_validation_mode.loose,
+                default = entitlements_validation_mode.warn,
                 doc = """
 An `entitlements_validation_mode` to control the validation of the requested entitlements against
 the provisioning profile to ensure they are supported.
