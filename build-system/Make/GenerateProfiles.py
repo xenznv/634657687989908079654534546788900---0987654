@@ -10,6 +10,10 @@ import base64
 
 from BuildEnvironment import run_executable_with_output, check_run_system
 
+# OpenSSL binary to use. Can be overridden with OPENSSL_BIN (e.g. Homebrew's
+# OpenSSL 3 on macOS, whose system LibreSSL cannot parse legacy-encrypted p12 files).
+OPENSSL = os.environ.get('OPENSSL_BIN', 'openssl')
+
 
 def setup_temp_keychain(p12_path, p12_password=''):
     """Create a temporary keychain and import the p12 certificate."""
@@ -58,13 +62,13 @@ def cleanup_temp_keychain(keychain_name):
 def get_signing_identity_from_p12(p12_path, p12_password=''):
     """Extract the common name (signing identity) from the p12 certificate."""
     proc = subprocess.Popen(
-        ['openssl', 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
+        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     cert_pem, _ = proc.communicate()
 
     proc2 = subprocess.Popen(
-        ['openssl', 'x509', '-noout', '-subject', '-nameopt', 'oneline,-esc_msb'],
+        [OPENSSL, 'x509', '-noout', '-subject', '-nameopt', 'oneline,-esc_msb'],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     subject, _ = proc2.communicate(cert_pem)
@@ -82,14 +86,14 @@ def get_certificate_base64_from_p12(p12_path, p12_password=''):
     """Extract the certificate as base64 from p12 file."""
     # Extract certificate in PEM format
     proc = subprocess.Popen(
-        ['openssl', 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
+        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     cert_pem, _ = proc.communicate()
 
     # Convert to DER format
     proc2 = subprocess.Popen(
-        ['openssl', 'x509', '-outform', 'DER'],
+        [OPENSSL, 'x509', '-outform', 'DER'],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     cert_der, _ = proc2.communicate(cert_pem)
