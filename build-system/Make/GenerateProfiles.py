@@ -122,6 +122,21 @@ def process_provisioning_profile(source, destination, certificate_data, signing_
     # Remove the DER-Encoded-Profile (signature)
     run_executable_with_output('plutil', arguments=['-remove', 'DER-Encoded-Profile', parsed_plist_file])
 
+    # Refresh the expiration date if it is in the past. The example profiles are long expired,
+    # and rules_apple's plisttool refuses profiles whose ExpirationDate has passed. The date is
+    # purely cosmetic once the profile is re-signed with our own certificate.
+    try:
+        expire_raw = run_executable_with_output('plutil', arguments=['-extract', 'ExpirationDate', 'raw', parsed_plist_file], check_result=False)
+        if expire_raw:
+            from datetime import datetime, timedelta
+            expire_dt = datetime.strptime(expire_raw.strip().strip('"'), '%Y-%m-%dT%H:%M:%SZ')
+            if expire_dt < datetime.now():
+                new_date = (datetime.now() + timedelta(days=3650)).strftime('%Y-%m-%dT%H:%M:%SZ')
+                run_executable_with_output('plutil', arguments=['-replace', 'ExpirationDate', '-date', new_date, parsed_plist_file])
+                print('Refreshed ExpirationDate to {}'.format(new_date))
+    except Exception as e:
+        print('Warning: could not refresh ExpirationDate: {}'.format(e))
+
     # Sign with the certificate from the temporary keychain
     run_executable_with_output('security', arguments=[
         'cms', '-S', '-k', keychain_name, '-N', signing_identity, '-i', parsed_plist_file, '-o', destination
