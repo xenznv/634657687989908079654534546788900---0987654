@@ -922,11 +922,7 @@ public final class ChatMessageInteractiveMediaNode: ASDisplayNode, GalleryItemTr
 
             var nativeSize: CGSize
 
-            var isSecretMedia = message.containsSecretMedia
-            let ghostBaseOneTimeVisualBypass = (((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.Enabled") as? Bool) ?? true) && ((((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.OneTimeScreenshots") as? Bool) ?? false) || ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.OneTimeScreenRecording") as? Bool) ?? false) || ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.OneTimeSave") as? Bool) ?? false))) && message.minAutoremoveOrClearTimeout != nil && message.id.peerId.namespace != Namespaces.Peer.SecretChat)
-            if ghostBaseOneTimeVisualBypass {
-                isSecretMedia = false
-            }
+            let isSecretMedia = message.containsSecretMedia
             var secretBeginTimeAndTimeout: (Double, Double)?
             if isSecretMedia {
                 if let attribute = message.autoclearAttribute {
@@ -2969,26 +2965,10 @@ public final class ChatMessageInteractiveMediaNode: ASDisplayNode, GalleryItemTr
             }
 
             if let remainingTime {
-                let jerkgramOutgoingTimedMediaViewed = (
-                    ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.Enabled") as? Bool) ?? true)
-                    && ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.OneTimeSave") as? Bool) ?? false)
-                    && message.id.peerId.namespace != Namespaces.Peer.SecretChat
-                    && (context.map { !message.effectivelyIncoming($0.account.peerId) } ?? false)
-                    && message.attributes.contains(where: { attribute in
-                        if let attribute = attribute as? ConsumableContentMessageAttribute {
-                            return attribute.consumed
-                        }
-                        return false
-                    })
-                )
                 if remainingTime == viewOnceTimeout {
-                    // Preserve Telegram's one-time badge and add a compact viewed state only
-                    // when the real consumable-content state says the recipient opened it.
-                    let jerkgramOneTimeBadgeText = jerkgramOutgoingTimedMediaViewed ? "1 ✓" : "1"
-                    badgeContent = .text(inset: 10.0, backgroundColor: messageTheme.mediaDateAndStatusFillColor, foregroundColor: messageTheme.mediaDateAndStatusTextColor, text: NSAttributedString(string: jerkgramOneTimeBadgeText), iconName: "Chat/Message/SecretMediaOnce")
+                    badgeContent = .text(inset: 10.0, backgroundColor: messageTheme.mediaDateAndStatusFillColor, foregroundColor: messageTheme.mediaDateAndStatusTextColor, text: NSAttributedString(string: "1"), iconName: "Chat/Message/SecretMediaOnce")
                 } else {
-                    let jerkgramTimedBadgeText = strings.MessageTimer_ShortSeconds(Int32(remainingTime)) + (jerkgramOutgoingTimedMediaViewed ? " ✓" : "")
-                    badgeContent = .text(inset: 10.0, backgroundColor: messageTheme.mediaDateAndStatusFillColor, foregroundColor: messageTheme.mediaDateAndStatusTextColor, text: NSAttributedString(string: jerkgramTimedBadgeText), iconName: "Chat/Message/SecretMediaPlay")
+                    badgeContent = .text(inset: 10.0, backgroundColor: messageTheme.mediaDateAndStatusFillColor, foregroundColor: messageTheme.mediaDateAndStatusTextColor, text: NSAttributedString(string: strings.MessageTimer_ShortSeconds(Int32(remainingTime))), iconName: "Chat/Message/SecretMediaPlay")
                 }
             }
         }

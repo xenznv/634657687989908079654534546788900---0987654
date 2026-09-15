@@ -908,7 +908,6 @@ public class ChatMessageInteractiveInstantVideoNode: ASDisplayNode {
                         }
 
                         durationNode.isSeen = !notConsumed || item.presentationData.isPreview
-                        durationNode.showsViewedCheck = false
                         let size = durationNode.size
                         if let durationBackgroundNode = strongSelf.durationBackgroundNode, size.width > 1.0 {
                             durationBackgroundNode.update(size: size, cornerRadius: size.height / 2.0, transition: .immediate)

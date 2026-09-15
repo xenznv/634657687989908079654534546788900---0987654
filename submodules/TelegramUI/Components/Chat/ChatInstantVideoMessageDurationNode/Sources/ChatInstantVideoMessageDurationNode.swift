@@ -36,13 +36,11 @@ private struct ChatInstantVideoMessageDurationNodeState: Equatable {
 private final class ChatInstantVideoMessageDurationNodeParameters: NSObject {
     let state: ChatInstantVideoMessageDurationNodeState
     let isSeen: Bool
-    let showsViewedCheck: Bool
     let textColor: UIColor
     
-    init(state: ChatInstantVideoMessageDurationNodeState, isSeen: Bool, showsViewedCheck: Bool, textColor: UIColor) {
+    init(state: ChatInstantVideoMessageDurationNodeState, isSeen: Bool, textColor: UIColor) {
         self.state = state
         self.isSeen = isSeen
-        self.showsViewedCheck = showsViewedCheck
         self.textColor = textColor
         
         super.init()
@@ -64,14 +62,6 @@ public final class ChatInstantVideoMessageDurationNode: ASImageNode {
     public var isSeen: Bool = false {
         didSet {
             if self.isSeen != oldValue {
-                self.updateContents()
-            }
-        }
-    }
-    
-    public var showsViewedCheck: Bool = false {
-        didSet {
-            if self.showsViewedCheck != oldValue {
                 self.updateContents()
             }
         }
@@ -189,7 +179,7 @@ public final class ChatInstantVideoMessageDurationNode: ASImageNode {
     }
     
     private func getParameters() -> NSObjectProtocol? {
-        return ChatInstantVideoMessageDurationNodeParameters(state: self.state, isSeen: self.isSeen, showsViewedCheck: self.showsViewedCheck, textColor: self.textColor)
+        return ChatInstantVideoMessageDurationNodeParameters(state: self.state, isSeen: self.isSeen, textColor: self.textColor)
     }
     
     private func generateContents(withParameters: Any?, isCancelled: () -> Bool) -> UIImage? {
@@ -221,15 +211,6 @@ public final class ChatInstantVideoMessageDurationNode: ASImageNode {
                 context.setFillColor(parameters.textColor.cgColor)
                 let diameter: CGFloat = 4.0
                 context.fillEllipse(in: CGRect(origin: CGPoint(x: size.width - size.height + floor((size.height - diameter) / 2.0), y: floor((size.height - diameter) / 2.0)), size: CGSize(width: diameter, height: diameter)))
-            } else if parameters.showsViewedCheck {
-                context.setStrokeColor(parameters.textColor.cgColor)
-                context.setLineWidth(1.4)
-                context.setLineCap(.round)
-                context.setLineJoin(.round)
-                context.move(to: CGPoint(x: size.width - 11.0, y: 10.0))
-                context.addLine(to: CGPoint(x: size.width - 8.0, y: 13.0))
-                context.addLine(to: CGPoint(x: size.width - 3.0, y: 6.0))
-                context.strokePath()
             }
 
             UIGraphicsPushContext(context)
