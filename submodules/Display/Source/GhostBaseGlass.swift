@@ -6,13 +6,15 @@ public enum GhostBaseGlassStyle {
 
     private static let enabledLock = NSLock()
     private static var enabledValue: Bool = {
-        return UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+        // Design customization retired: glass effects are permanently off so
+        // every surface renders with stock Telegram visuals.
+        return false
     }()
 
     public static func reloadFromDefaults() {
         self.enabledLock.lock()
         defer { self.enabledLock.unlock() }
-        self.enabledValue = UserDefaults.standard.object(forKey: self.enabledKey) as? Bool ?? true
+        self.enabledValue = false
     }
 
     public static var isEnabled: Bool {
@@ -101,15 +103,7 @@ public struct GhostBaseProfileBlurSettings: Equatable {
     // Reads the master key first. Child settings are not read and no profile
     // object is created when the effect is disabled.
     public static func loadEnabled() -> GhostBaseProfileBlurSettings? {
-        guard GhostBaseGlassStyle.isEnabled else {
-            return nil
-        }
-        let defaults = UserDefaults.standard
-        return GhostBaseProfileBlurSettings(
-            avatarBlurInProfile: defaults.object(forKey: self.avatarBlurKey) as? Bool ?? true,
-            animatedBackgroundEnabled: defaults.object(forKey: self.animatedKey) as? Bool ?? true,
-            tintEnabled: defaults.object(forKey: self.tintKey) as? Bool ?? true,
-            reducedBlur: defaults.object(forKey: self.reducedKey) as? Bool ?? false
-        )
+        // Design customization retired: profile blur never activates.
+        return nil
     }
 }

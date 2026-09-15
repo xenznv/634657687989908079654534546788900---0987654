@@ -112,6 +112,11 @@ public func stringForMessageTimestampStatus(
             forKey: "jerkgram.Appearance.MessageSeconds"
         ) as? Bool
     ) ?? false
+    let ghostBaseShowCharacterCount = (
+        UserDefaults.standard.object(
+            forKey: "jerkgram.Messages.CharacterCount"
+        ) as? Bool
+    ) ?? false
 
     var dateText = stringForMessageTimestamp(
         timestamp: timestamp,
@@ -248,6 +253,11 @@ public func stringForMessageTimestampStatus(
     }
     if ignoreAuthor {
         authorTitle = nil
+    }
+    
+    if ghostBaseShowCharacterCount && !message.text.isEmpty {
+        let characterCount = (message.text as NSString).length
+        dateText = "[\(characterCount)] \(dateText)"
     }
     
     if case .minimal = format {

@@ -45,8 +45,8 @@ private enum GhostBaseKey {
     static let preserveDeletedMedia = "jerkgram.Messages.PreserveDeletedMedia"
     static let deletedMediaCacheLimit = "jerkgram.Messages.DeletedMediaCacheLimit"
     static let deletedMediaRetentionDays = "jerkgram.Messages.DeletedMediaRetentionDays"
-    static let showRamUnderClock = "jerkgram.Appearance.ShowRamUnderClock"
     static let messageSeconds = "jerkgram.Appearance.MessageSeconds"
+    static let messageCharacterCount = "jerkgram.Messages.CharacterCount"
     static let hideOwnPhone = "jerkgram.Appearance.HideOwnPhone"
 
     static let protectedEnabled = "jerkgram.ProtectedContent.Enabled"
@@ -460,8 +460,8 @@ private func jerkgramStateValues(_ state: GhostBaseSettingsState) -> [String: Je
         ghostBaseSendTextStyleKey: .string(state.sendTextStyle),
         GhostBaseKey.deletedPortableReplies: .bool(state.deletedPortableReplies),
         GhostBaseKey.preserveDeletedMedia: .bool(state.preserveDeletedMedia),
-        GhostBaseKey.showRamUnderClock: .bool(state.showRamUnderClock),
         GhostBaseKey.messageSeconds: .bool(state.messageSeconds),
+        GhostBaseKey.messageCharacterCount: .bool(state.messageCharacterCount),
         GhostBaseKey.hideOwnPhone: .bool(state.hideOwnPhone),
         GhostBaseKey.protectedEnabled: .bool(state.protectedEnabled),
         GhostBaseKey.protectedGalleryShare: .bool(state.protectedGalleryShare),
@@ -589,8 +589,8 @@ struct GhostBaseSettingsState: Equatable {
 
     var deletedPortableReplies: Bool
     var preserveDeletedMedia: Bool
-    var showRamUnderClock: Bool
     var messageSeconds: Bool
+    var messageCharacterCount: Bool
     var hideOwnPhone: Bool
 
     var protectedEnabled: Bool
@@ -656,16 +656,12 @@ struct GhostBaseSettingsState: Equatable {
 
             ),
 
-            showRamUnderClock: jerkgramScopedBool(accountPeerId: accountPeerId, key: 
-
-                GhostBaseKey.showRamUnderClock,
-
-                defaultValue: false
-
-            ),
-
             messageSeconds: jerkgramScopedBool(accountPeerId: accountPeerId, key: 
                 GhostBaseKey.messageSeconds,
+                defaultValue: false
+            ),
+            messageCharacterCount: jerkgramScopedBool(accountPeerId: accountPeerId, key:
+                GhostBaseKey.messageCharacterCount,
                 defaultValue: false
             ),
             hideOwnPhone: jerkgramScopedBool(accountPeerId: accountPeerId, key: 
@@ -1785,185 +1781,7 @@ private func ghostBaseSettingsEntries(
     let debug = GhostBaseSettingsSection.debug.rawValue
     let footer = GhostBaseSettingsSection.footer.rawValue
 
-    if page == .debugResearch {
-        entries.append(.header(debug, strings.researchHiddenGiftsProbe))
-        entries.append(.researchAction(
-            debug,
-            900,
-            strings.researchCheckNineGiftsSelf,
-            "hiddenGiftsSelf"
-        ))
-        entries.append(.researchAction(
-            debug,
-            901,
-            strings.researchCheckUserGifts,
-            "hiddenGiftsOther"
-        ))
-        entries.append(.researchInfo(
-            debug,
-            902,
-            ghostBaseHiddenGiftsReport()
-        ))
-    }
 
-    if page == .debugResearch {
-        entries.append(
-            .header(
-                debug,
-                strings.researchHiddenGiftsSend
-            )
-        )
-
-        entries.append(.researchAction(
-            debug,
-            920,
-            "New Year Bear · ID 5956217000635139069",
-            "hiddenGiftSendSelect0"
-        ))
-        entries.append(.researchAction(
-            debug,
-            921,
-            "Christmas Tree · ID 5922558454332916696",
-            "hiddenGiftSendSelect1"
-        ))
-        entries.append(.researchAction(
-            debug,
-            922,
-            "Valentine Bear · ID 5800655655995968830",
-            "hiddenGiftSendSelect2"
-        ))
-        entries.append(.researchAction(
-            debug,
-            923,
-            "March 8 Bear · ID 5866352046986232958",
-            "hiddenGiftSendSelect3"
-        ))
-        entries.append(.researchAction(
-            debug,
-            924,
-            "Valentine Card · ID 5801108895304779062",
-            "hiddenGiftSendSelect4"
-        ))
-        entries.append(.researchAction(
-            debug,
-            925,
-            "Leprechaun Bear · ID 5893356958802511476",
-            "hiddenGiftSendSelect5"
-        ))
-        entries.append(.researchAction(
-            debug,
-            926,
-            "April 1 Bear · ID 5935895822435615975",
-            "hiddenGiftSendSelect6"
-        ))
-        entries.append(.researchAction(
-            debug,
-            927,
-            "Easter Bear · ID 5969796561943660080",
-            "hiddenGiftSendSelect7"
-        ))
-        entries.append(.researchAction(
-            debug,
-            928,
-            "Builder Bear · ID 6026193266406327981",
-            "hiddenGiftSendSelect8"
-        ))
-
-        entries.append(.researchAction(
-            debug,
-            929,
-            strings.researchSendToSelf,
-            "hiddenGiftSendSelf"
-        ))
-
-        entries.append(.researchAction(
-            debug,
-            930,
-            strings.researchSelectAnotherRecipient,
-            "hiddenGiftSendRecipient"
-        ))
-
-        entries.append(.researchAction(
-            debug,
-            931,
-            ghostBaseHiddenGiftSendState.hideName
-                ? strings.researchHideSenderNameOn
-                : strings.researchHideSenderNameOff,
-            "hiddenGiftSendToggleHideName"
-        ))
-
-        if ghostBaseHiddenGiftSendState.giftId != nil,
-           ghostBaseHiddenGiftSendState.targetPeerId != nil,
-           !ghostBaseHiddenGiftSendState.firstConfirmed,
-           !ghostBaseHiddenGiftSendState.isSending {
-            entries.append(.researchAction(
-                debug,
-                932,
-                strings.researchConfirmGiftRecipient,
-                "hiddenGiftSendConfirm"
-            ))
-        }
-
-        if ghostBaseHiddenGiftSendState.firstConfirmed,
-           !ghostBaseHiddenGiftSendState.isSending {
-            entries.append(.researchAction(
-                debug,
-                933,
-                strings.researchPayAndSend,
-                "hiddenGiftSendPay"
-            ))
-        }
-
-        if !ghostBaseHiddenGiftSendState.isSending {
-            entries.append(.researchAction(
-                debug,
-                934,
-                strings.researchResetSelection,
-                "hiddenGiftSendReset"
-            ))
-        }
-
-        entries.append(.researchInfo(
-            debug,
-            935,
-            ghostBaseHiddenGiftSendSummary()
-        ))
-    }
-
-    if page == .debugResearch {
-        entries.append(.header(
-            debug,
-            strings.researchBotCapabilityHeader
-        ))
-        entries.append(.researchAction(
-            debug,
-            940,
-            strings.researchBotCapability,
-            "botCapabilityProbe"
-        ))
-        entries.append(.researchInfo(
-            debug,
-            941,
-            ghostBaseBotCapabilityReport()
-        ))
-
-
-        entries.append(.researchAction(
-            debug,
-            942,
-            strings.researchBotDifference,
-            "botDifferenceProbe"
-        ))
-        entries.append(.researchInfo(
-            debug,
-            943,
-            ghostBaseBotDifferenceReport()
-        ))
-
-
-
-
-    }
 
     if page == .root {
         // Keep the agreed Telegram-native destination list. Presentation work
@@ -1975,10 +1793,7 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(0, 3, strings.messages, strings.messagesHint, "Chat/Context Menu/MessageBubble", .messages),
             .disclosureDetail(0, 4, strings.protectedContent, strings.protectedContentHint, "Premium/CopyProtection/NoForward", .protectedContent),
             .disclosureDetail(0, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "Item List/Icons/Stories", .mediaStories),
-            .disclosureDetail(0, 6, strings.appearance, strings.appearanceHint, "Chat/Context Menu/ApplyTheme", .appearance),
-            .disclosureDetail(0, 7, strings.debugResearch, strings.debugResearchHint, "Chat/Context Menu/FormatCode", .debugResearch),
-            .disclosureDetail(0, 8, strings.dataAndBackup, strings.dataAndBackupHint, "Item List/Icons/Stories", .dataAndBackup),
-            .disclosureDetail(0, 9, strings.about, strings.aboutHint, "Chat/Context Menu/Info", .about)
+            .disclosureDetail(0, 6, strings.dataAndBackup, strings.dataAndBackupHint, "Item List/Icons/Stories", .dataAndBackup)
         ]
     }
 
@@ -1994,6 +1809,10 @@ private func ghostBaseSettingsEntries(
             .toggle(0, 3, GhostBaseKey.showDCs, strings.avatarDc, state.showDCs),
             .toggle(0, 4, GhostBaseKey.showRegistration, strings.registrationDate, state.showRegistration),
             .header(1, strings.basicFunctions),
+            .toggle(1, 40, GhostBaseKey.messageSeconds, strings.messageSeconds, state.messageSeconds),
+            .toggle(1, 41, GhostBaseKey.messageCharacterCount, strings.messageCharacterCount, state.messageCharacterCount),
+            .toggle(1, 42, GhostBaseKey.hideOwnPhone, strings.hideMyPhone, state.hideOwnPhone),
+            .info(1, strings.hidePhoneHint),
             .valueDisclosure(1, 50, strings.starsBalance, strings.starsOverrideSummary(state.localStarsEnabled, balance), nil, .stars),
             .header(2, strings.backup),
             .disclosure(2, 1, strings.dataAndBackup, "Item List/Icons/Stories", .dataAndBackup)
@@ -2114,58 +1933,6 @@ private func ghostBaseSettingsEntries(
             .toggle(0, 4, GhostBaseKey.storySave, strings.storySave, state.storySave)
         ]
     }
-
-    if page == .appearance {
-        return [
-            .header(0, strings.profileBackground),
-            .toggle(0, 1, GhostBaseKey.glassEnabled, strings.profileBackgroundEffect, state.glassEnabled),
-            .toggle(0, 2, GhostBaseKey.profileAvatarBlur, strings.preferAvatarAsBackground, state.profileAvatarBlur),
-            .toggle(0, 3, GhostBaseKey.profileAnimatedBackground, strings.animatedBackground, state.profileAnimatedBackground),
-            .toggle(0, 4, GhostBaseKey.profileBlurTint, strings.colorTint, state.profileBlurTint),
-            .toggle(0, 5, GhostBaseKey.profileBlurReduced, strings.reducedBlur, state.profileBlurReduced),
-            .header(1, strings.interface),
-            .toggle(1, 5, GhostBaseKey.messageSeconds, strings.messageSeconds, state.messageSeconds),
-            .toggle(1, 6, GhostBaseKey.hideOwnPhone, strings.hideMyPhone, state.hideOwnPhone),
-            .toggle(
-                1,
-                7,
-                GhostBaseKey.showRamUnderClock,
-                strings.showRamUnderClock,
-                state.showRamUnderClock
-            ),
-            .info(1, strings.hidePhoneHint)
-        ]
-    }
-
-    if page == .about {
-        func channelEntry(index: Int32, username: String, state: JerkgramAboutChannelState) -> GhostBaseSettingsEntry {
-            switch state {
-            case .loading:
-                return .aboutChannel(0, index, username, nil, strings.communityLoading, true)
-            case let .available(peer, preview):
-                let visiblePreview = preview.isEmpty ? strings.communityNoPosts : "@\(username) · \(preview)"
-                return .aboutChannel(0, index, username, peer, visiblePreview, false)
-            case .unavailable:
-                return .aboutChannel(0, index, username, nil, strings.communityUnavailable, false)
-            }
-        }
-        return [
-            .header(0, strings.about),
-            channelEntry(index: 1, username: "JerkgramApp", state: aboutChannelState),
-            channelEntry(index: 2, username: "JerkgramCommunity", state: aboutCommunityState),
-            .header(1, strings.version),
-            .aboutValue(1, 1, strings.jerkgramVersion, JerkgramReleaseIdentity.displayVersion),
-            .aboutValue(1, 2, strings.build, JerkgramReleaseIdentity.build),
-            .aboutValue(1, 3, strings.telegramBase, JerkgramReleaseIdentity.telegramBase)
-        ]
-    }
-
-    if page == .debugResearch {
-        return [
-            .researchAction(0, 0, strings.copyExtensionDiagnostics, "copyExtensionDiagnostics")
-        ]
-    }
-
 
     entries.append(.header(ghost, strings.ghostMode))
     entries.append(.toggle(ghost, 1, GhostBaseKey.readMessages, strings.readGhost, state.readMessages))
@@ -2574,13 +2341,7 @@ KeychainFix: sideloadKeychainFix.dylib
 Version: v1.1G-unified-recovery
 """))
 
-    entries.append(.info(footer, "Profile Blur settings apply when a profile is opened. Activity Ghost hides typing, recording, uploading, sticker, game and emoji activity when enabled. v0.5C adds a lower-layer activity guard. Hide Online is active in v0.6A. Read Ghost is active in v0.6B. Read Ghost Extras are active in v0.6C. Scheduled Send is active in v0.7D. Protected Content controls and Internal ShareController Scheduled Send are active in v0.8C."))
-
-    if page == .debugResearch {
-        return entries.filter {
-            $0.section == debug
-        }
-    }
+    entries.append(.info(footer, "Activity Ghost hides typing, recording, uploading, sticker, game and emoji activity when enabled."))
 
     return entries
 }
@@ -2609,12 +2370,9 @@ public func ghostBaseSettingsController(
         page = .protectedContent
     case "mediaStories":
         page = .mediaStories
-    case "appearance":
-        page = .appearance
-    case "debugResearch":
-        page = .debugResearch
-    case "about":
-        page = .about
+    case "appearance", "debugResearch", "about":
+        // Design customization and research tabs are retired; land on root.
+        page = .root
     default:
         page = .root
     }
@@ -2823,12 +2581,7 @@ private func ghostBaseSettingsPageController(
         let updated = stateValue.modify { current in
             let next = f(current)
 
-            let ghostBaseVisualSettingsChanged =
-                current.glassEnabled != next.glassEnabled
-                || current.profileAvatarBlur != next.profileAvatarBlur
-                || current.profileAnimatedBackground != next.profileAnimatedBackground
-                || current.profileBlurTint != next.profileBlurTint
-                || current.profileBlurReduced != next.profileBlurReduced
+            let ghostBaseVisualSettingsChanged = false
 
             jerkgramPersistChangedSettings(
                 accountPeerId: context.account.peerId.toInt64(),
@@ -3653,24 +3406,6 @@ private func ghostBaseSettingsPageController(
             case GhostBaseKey.hideBlockedReactions:
                 updated.hideBlockedReactions = value
 
-            case GhostBaseKey.glassEnabled:
-                updated.glassEnabled = value
-                GhostBaseGlassStyle.setEnabled(value)
-
-            case GhostBaseKey.profileAvatarBlur:
-                updated.profileAvatarBlur = value
-                UserDefaults.standard.set(value, forKey: GhostBaseKey.profileAvatarBlur)
-
-            case GhostBaseKey.profileAnimatedBackground:
-                updated.profileAnimatedBackground = value
-            case GhostBaseKey.profileBlurTint:
-                updated.profileBlurTint = value
-                UserDefaults.standard.set(value, forKey: GhostBaseKey.profileBlurTint)
-
-            case GhostBaseKey.profileBlurReduced:
-                updated.profileBlurReduced = value
-                UserDefaults.standard.set(value, forKey: GhostBaseKey.profileBlurReduced)
-
             case GhostBaseKey.deletedPortableReplies:
                 updated.deletedPortableReplies = value
                 UserDefaults.standard.set(
@@ -3685,19 +3420,22 @@ private func ghostBaseSettingsPageController(
                     forKey: GhostBaseKey.preserveDeletedMedia
                 )
 
-            case GhostBaseKey.showRamUnderClock:
-                updated.showRamUnderClock = value
-                UserDefaults.standard.set(
-                    value,
-                    forKey: GhostBaseKey.showRamUnderClock
-                )
-        NotificationCenter.default.post(name: Notification.Name("GhostBaseRamOverlayPreferenceChanged"), object: nil)
-
             case GhostBaseKey.messageSeconds:
                 updated.messageSeconds = value
                 UserDefaults.standard.set(
                     value,
                     forKey: GhostBaseKey.messageSeconds
+                )
+
+            case GhostBaseKey.messageCharacterCount:
+                updated.messageCharacterCount = value
+                UserDefaults.standard.set(
+                    value,
+                    forKey: GhostBaseKey.messageCharacterCount
+                )
+                NotificationCenter.default.post(
+                    name: Notification.Name("jerkgram.MessageDecorationsDidChange"),
+                    object: nil
                 )
 
             case GhostBaseKey.hideOwnPhone:

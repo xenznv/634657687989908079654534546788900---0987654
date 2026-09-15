@@ -89,13 +89,6 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     
     private var applicationInFocusDisposable: Disposable?
     private var storyUploadEventsDisposable: Disposable?
-
-    private var ghostBaseRamLabel: UILabel?
-    private var ghostBaseRamTimer: Foundation.Timer?
-    private var ghostBaseRamDefaultsObserver: NSObjectProtocol?
-    private var ghostBaseRamActiveObserver: NSObjectProtocol?
-    private var ghostBaseRamInactiveObserver: NSObjectProtocol?
-    private var ghostBaseRamLayout: ContainerViewLayout?
     
     override public var minimizedContainer: MinimizedContainer? {
         didSet {
@@ -121,7 +114,6 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 let previousTheme = strongSelf.presentationData.theme
                 strongSelf.presentationData = presentationData
                 if previousTheme !== presentationData.theme {
-                    strongSelf.ghostBaseRamLabel?.textColor = presentationData.theme.overallDarkAppearance ? UIColor.white.withAlphaComponent(0.78) : UIColor.black.withAlphaComponent(0.68)
                     (strongSelf.rootTabController as? TabBarControllerImpl)?.updateTheme(theme: presentationData.theme)
                     strongSelf.rootTabController?.statusBar.statusBarStyle = presentationData.theme.rootController.statusBarStyle.style
                 }
@@ -144,8 +136,6 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 moveStorySource(engine: self.context.engine, peerId: self.context.account.peerId, from: Int64(stableId), to: Int64(id))
             })
         }
-    
-        self.ghostBaseSetupRamOverlay()
     }
     
     required public init(coder aDecoder: NSCoder) {
@@ -157,137 +147,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.presentationDataDisposable?.dispose()
         self.applicationInFocusDisposable?.dispose()
         self.storyUploadEventsDisposable?.dispose()
-        self.ghostBaseRamTimer?.invalidate()
-        if let observer = self.ghostBaseRamDefaultsObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        if let observer = self.ghostBaseRamActiveObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
-        if let observer = self.ghostBaseRamInactiveObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
     }
     
-    private static let ghostBaseRamEnabledKey =
-        "jerkgram.Appearance.ShowRamUnderClock"
-
-    private func ghostBaseSetupRamOverlay() {
-        self.ghostBaseRamDefaultsObserver = NotificationCenter.default.addObserver(
-            forName: Notification.Name("GhostBaseRamOverlayPreferenceChanged"),
-            object: nil,
-            queue: .main,
-            using: { [weak self] _ in
-                self?.ghostBaseUpdateRamOverlayState()
-            }
-        )
-        self.ghostBaseRamActiveObserver = NotificationCenter.default.addObserver(
-            forName: UIApplication.didBecomeActiveNotification,
-            object: nil,
-            queue: .main,
-            using: { [weak self] _ in
-                self?.ghostBaseUpdateRamOverlayState()
-            }
-        )
-        self.ghostBaseRamInactiveObserver = NotificationCenter.default.addObserver(
-            forName: UIApplication.willResignActiveNotification,
-            object: nil,
-            queue: .main,
-            using: { [weak self] _ in
-                self?.ghostBaseUpdateRamOverlayState(forceInactive: true)
-            }
-        )
-        self.ghostBaseUpdateRamOverlayState()
-    }
-
-    private func ghostBaseUpdateRamOverlayState(forceInactive: Bool = false) {
-        let enabled = (
-            UserDefaults.standard.object(
-                forKey: Self.ghostBaseRamEnabledKey
-            ) as? Bool
-        ) ?? false
-        let active = !forceInactive && UIApplication.shared.applicationState == .active
-
-        guard enabled && active else {
-            self.ghostBaseRamTimer?.invalidate()
-            self.ghostBaseRamTimer = nil
-            self.ghostBaseRamLabel?.removeFromSuperview()
-            self.ghostBaseRamLabel = nil
-            return
-        }
-
-        let label: UILabel
-        if let current = self.ghostBaseRamLabel {
-            label = current
-        } else {
-            label = UILabel()
-            label.isUserInteractionEnabled = false
-            label.backgroundColor = .clear
-            label.font = UIFont.monospacedDigitSystemFont(
-                ofSize: 8.5,
-                weight: .semibold
-            )
-            label.textAlignment = .left
-            label.adjustsFontSizeToFitWidth = false
-            self.view.addSubview(label)
-            self.ghostBaseRamLabel = label
-        }
-
-        label.textColor = self.presentationData.theme.overallDarkAppearance
-            ? UIColor.white.withAlphaComponent(0.78)
-            : UIColor.black.withAlphaComponent(0.68)
-
-        if self.ghostBaseRamTimer == nil {
-            let timer = Foundation.Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
-                self?.ghostBaseUpdateRamValue()
-            }
-            timer.tolerance = 0.5
-            RunLoop.main.add(timer, forMode: .common)
-            self.ghostBaseRamTimer = timer
-        }
-
-        self.ghostBaseUpdateRamValue()
-        self.ghostBaseLayoutRamLabel()
-        self.view.bringSubviewToFront(label)
-    }
-
-        private func ghostBaseUpdateRamValue() {
-        guard self.ghostBaseRamLabel != nil else { return }
-        JerkgramMemorySampler.shared.sample(consumer: "ramOverlay") { [weak self] bytes in
-            guard let label = self?.ghostBaseRamLabel else { return }
-            if bytes > 0 {
-                let megabytes = Int((bytes + 524_288) / 1_048_576)
-                label.text = "RAM \(megabytes) MB"
-            } else {
-                label.text = "RAM —"
-            }
-        }
-    }
-
-    private func ghostBaseLayoutRamLabel() {
-        guard let label = self.ghostBaseRamLabel,
-              let layout = self.ghostBaseRamLayout else {
-            return
-        }
-        let statusHeight = max(
-            layout.statusBarHeight ?? 0.0,
-            layout.safeInsets.top
-        )
-        let height: CGFloat = 11.0
-        let y: CGFloat
-        if statusHeight >= 40.0 {
-            y = max(0.0, statusHeight - height - 2.0)
-        } else {
-            y = statusHeight + 1.0
-        }
-        label.frame = CGRect(
-            x: max(6.0, layout.safeInsets.left + 6.0),
-            y: y,
-            width: 76.0,
-            height: height
-        )
-    }
-
     public func getContactsController() -> ViewController? {
         return self.contactsController
     }
@@ -336,8 +197,6 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         }
     
         super.containerLayoutUpdated(layout, transition: transition)
-        self.ghostBaseRamLayout = layout
-        self.ghostBaseLayoutRamLabel()
     }
     
     public func addRootControllers(showCallsTab: Bool) {

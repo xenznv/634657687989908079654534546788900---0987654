@@ -86,6 +86,7 @@ public enum JerkgramStringKey: String, CaseIterable {
     case other
     case interface
     case messageSeconds
+    case messageCharacterCount
     case hideMyPhone
     case showRamUnderClock
     case hidePhoneHint
@@ -262,6 +263,7 @@ public struct JerkgramStrings {
     public var other: String { self.text(.other) }
     public var interface: String { self.text(.interface) }
     public var messageSeconds: String { self.text(.messageSeconds) }
+    public var messageCharacterCount: String { self.text(.messageCharacterCount) }
     public var hideMyPhone: String { self.text(.hideMyPhone) }
     public var showRamUnderClock: String { self.text(.showRamUnderClock) }
     public var hidePhoneHint: String { self.text(.hidePhoneHint) }
@@ -482,6 +484,7 @@ public struct JerkgramStrings {
         .other: "Other",
         .interface: "Interface",
         .messageSeconds: "Message Seconds",
+        .messageCharacterCount: "Character Count",
         .hideMyPhone: "Hide My Phone Number",
         .showRamUnderClock: "Show RAM Under Clock",
         .hidePhoneHint: "Your phone number is hidden only locally in Jerkgram. Profile editing and number changing remain available.",
@@ -625,6 +628,7 @@ public struct JerkgramStrings {
         .other: "Прочее",
         .interface: "Интерфейс",
         .messageSeconds: "Секунды в сообщениях",
+        .messageCharacterCount: "Счётчик символов",
         .hideMyPhone: "Скрывать мой номер",
         .showRamUnderClock: "Показывать RAM под часами",
         .hidePhoneHint: "Номер скрывается только локально в интерфейсе Jerkgram. Экран изменения профиля и смены номера остаётся доступен.",
