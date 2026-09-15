@@ -2590,7 +2590,7 @@ public func ghostBaseSettingsController(
 ) -> ViewController {
     let rawPage = UserDefaults.standard.string(
         forKey: "jerkgram.Settings.InitialPage"
-    ) ?? "home"
+    ) ?? "root"
 
     UserDefaults.standard.removeObject(
         forKey: "jerkgram.Settings.InitialPage"
@@ -2599,6 +2599,8 @@ public func ghostBaseSettingsController(
     let page: GhostBaseSettingsPage
 
     switch rawPage {
+    case "root":
+        page = .root
     case "ghostMode":
         page = .ghostMode
     case "messages":
@@ -2614,7 +2616,7 @@ public func ghostBaseSettingsController(
     case "about":
         page = .about
     default:
-        page = .home
+        page = .root
     }
 
     return ghostBaseSettingsPageController(

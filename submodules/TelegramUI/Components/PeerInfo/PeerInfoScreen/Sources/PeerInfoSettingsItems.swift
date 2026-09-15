@@ -197,7 +197,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         icon: jerkgramMainSettingsIcon("Jerkgram/Settings/Airplane"),
         action: {
             UserDefaults.standard.set(
-                "home",
+                "root",
                 forKey: "jerkgram.Settings.InitialPage"
             )
             interaction.openSettings(.ghostbase)
