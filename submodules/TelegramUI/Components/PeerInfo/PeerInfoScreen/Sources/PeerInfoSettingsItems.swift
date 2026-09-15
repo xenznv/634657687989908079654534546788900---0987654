@@ -35,10 +35,6 @@ private func jerkgramMainSettingsIcon(
         background = 0x8A6138
     case "Chat/Context Menu/Info":
         background = 0x4B4F54
-    case "Chat/Context Menu/Logout":
-        background = 0x7A3D3D
-    case "Chat/Context Menu/Edit":
-        background = 0x436C7A
 
     default:
         return nil
@@ -194,8 +190,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
             interaction.openSettings(.profile)
         }))
 
-        // Single Settings tab with sub-sections grouped by feature.
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 0,
         text: presentationData.strings.jerkgram.settingsTitle,
@@ -209,7 +204,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 1,
         text: presentationData.strings.jerkgram.ghostMode,
@@ -223,7 +218,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 2,
         text: presentationData.strings.jerkgram.messages,
@@ -237,7 +232,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 3,
         text: presentationData.strings.jerkgram.protectedContent,
@@ -251,7 +246,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 4,
         text: presentationData.strings.jerkgram.mediaAndStories,
@@ -265,7 +260,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 5,
         text: presentationData.strings.jerkgram.appearance,
@@ -279,7 +274,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 6,
         text: presentationData.strings.jerkgram.debugResearch,
@@ -293,7 +288,7 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         }
     )
 )
-        items[.ghostbase]!.append(
+    items[.ghostbase]!.append(
     PeerInfoScreenDisclosureItem(
         id: 7,
         text: presentationData.strings.jerkgram.about,
@@ -301,160 +296,6 @@ func settingsItems(data: PeerInfoScreenData?, context: AccountContext, presentat
         action: {
             UserDefaults.standard.set(
                 "about",
-                forKey: "jerkgram.Settings.InitialPage"
-            )
-            interaction.openSettings(.ghostbase)
-        }
-    )
-)
-
-        // Sub-sections inside the same Settings menu: grouped by feature.
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 100,
-        text: presentationData.strings.Settings_NotificationsAndSounds,
-        icon: PresentationResourcesSettings.notifications,
-        action: {
-            interaction.openSettings(.notificationsAndSounds)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 101,
-        text: presentationData.strings.Settings_PowerSaving,
-        icon: PresentationResourcesSettings.powerSaving,
-        action: {
-            interaction.openSettings(.powerSaving)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 102,
-        text: presentationData.strings.Settings_PrivacySettings,
-        icon: PresentationResourcesSettings.security,
-        action: {
-            interaction.openSettings(.privacyAndSecurity)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 103,
-        text: presentationData.strings.Settings_ChatFolders,
-        icon: PresentationResourcesSettings.chatFolders,
-        action: {
-            interaction.openSettings(.chatFolders)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 104,
-        text: presentationData.strings.Settings_Devices,
-        icon: PresentationResourcesSettings.devices,
-        action: {
-            interaction.openSettings(.devices)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 105,
-        text: presentationData.strings.Settings_SavedMessages,
-        icon: PresentationResourcesSettings.savedMessages,
-        action: {
-            interaction.openSettings(.savedMessages)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 106,
-        text: presentationData.strings.CallSettings_RecentCalls,
-        icon: PresentationResourcesSettings.recentCalls,
-        action: {
-            interaction.openSettings(.recentCalls)
-        }
-    )
-)
-
-        // Подразделы, близкие к скриншоту: отображение информации + доп. секции.
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 200,
-        text: presentationData.strings.Settings_AppLanguage,
-        icon: PresentationResourcesSettings.language,
-        action: {
-            interaction.openSettings(.language)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 201,
-        text: presentationData.strings.Settings_Passport,
-        icon: PresentationResourcesSettings.passport,
-        action: {
-            interaction.openSettings(.passport)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 202,
-        text: presentationData.strings.EditProfile_Title,
-        icon: jerkgramMainSettingsIcon("Chat/Context Menu/Edit"),
-        action: {
-            interaction.openSettings(.edit)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 203,
-        text: presentationData.strings.Settings_AddAnotherAccount,
-        icon: PresentationResourcesItemList.plusIconImage(presentationData.theme),
-        action: {
-            interaction.openSettings(.addAccount)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 204,
-        text: presentationData.strings.Settings_Logout,
-        icon: jerkgramMainSettingsIcon("Chat/Context Menu/Logout"),
-        action: {
-            interaction.openSettings(.logout)
-        }
-    )
-)
-
-        // Menu sections: what shows in Telegram menu.
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 300,
-        text: presentationData.strings.jerkgram.mainMenu,
-        icon: jerkgramMainSettingsIcon("Chat/Context Menu/Info"),
-        action: {
-            UserDefaults.standard.set(
-                "home",
-                forKey: "jerkgram.Settings.InitialPage"
-            )
-            interaction.openSettings(.ghostbase)
-        }
-    )
-)
-        items[.ghostbase]!.append(
-    PeerInfoScreenDisclosureItem(
-        id: 301,
-        text: presentationData.strings.jerkgram.settingsTitle,
-        icon: jerkgramMainSettingsIcon("Jerkgram/Settings/Airplane"),
-        action: {
-            UserDefaults.standard.set(
-                "home",
                 forKey: "jerkgram.Settings.InitialPage"
             )
             interaction.openSettings(.ghostbase)
