@@ -16,7 +16,15 @@ public enum JerkgramStringKey: String, CaseIterable {
     case debugResearch
     case about
 
-    case profileCard
+    case basicFunctionsHint
+    case ghostModeHint
+    case messagesHint
+    case protectedContentHint
+    case mediaAndStoriesHint
+    case appearanceHint
+    case debugResearchHint
+    case dataAndBackupHint
+    case aboutHint
     case showIds
     case showDcs
     case registrationDate
@@ -176,6 +184,16 @@ public struct JerkgramStrings {
     public var appearance: String { self.text(.appearance) }
     public var debugResearch: String { self.text(.debugResearch) }
     public var about: String { self.text(.about) }
+
+    public var basicFunctionsHint: String { self.text(.basicFunctionsHint) }
+    public var ghostModeHint: String { self.text(.ghostModeHint) }
+    public var messagesHint: String { self.text(.messagesHint) }
+    public var protectedContentHint: String { self.text(.protectedContentHint) }
+    public var mediaAndStoriesHint: String { self.text(.mediaAndStoriesHint) }
+    public var appearanceHint: String { self.text(.appearanceHint) }
+    public var debugResearchHint: String { self.text(.debugResearchHint) }
+    public var dataAndBackupHint: String { self.text(.dataAndBackupHint) }
+    public var aboutHint: String { self.text(.aboutHint) }
 
     public var profileCard: String { self.text(.profileCard) }
     public var showIds: String { self.text(.showIds) }
@@ -392,6 +410,16 @@ public struct JerkgramStrings {
         .debugResearch: "Debug / Research",
         .about: "About",
 
+        .basicFunctionsHint: "Profile info, stars, backup",
+        .ghostModeHint: "Hide online, reads and typing",
+        .messagesHint: "Deleted, edited, cache",
+        .protectedContentHint: "Screenshots and saving protection",
+        .mediaAndStoriesHint: "Stories, media and downloads",
+        .appearanceHint: "Avatars, message bubbles, effects",
+        .debugResearchHint: "Diagnostics and research tools",
+        .dataAndBackupHint: "Archive, export, retention",
+        .aboutHint: "Version, channel, developer",
+
         .profileCard: "Profile Card",
         .showIds: "Show IDs",
         .showDcs: "Show DCs",
@@ -524,6 +552,16 @@ public struct JerkgramStrings {
         .appearance: "Оформление",
         .debugResearch: "Отладка / Исследования",
         .about: "О Jerkgram",
+
+        .basicFunctionsHint: "Информация профиля, звёзды, бэкап",
+        .ghostModeHint: "Скрытие онлайн, прочтений и набора",
+        .messagesHint: "Удалённые, изменённые, кэш",
+        .protectedContentHint: "Защита от скриншотов и сохранения",
+        .mediaAndStoriesHint: "Истории, медиа и загрузки",
+        .appearanceHint: "Аватары, пузыри сообщений, эффекты",
+        .debugResearchHint: "Диагностика и инструменты исследования",
+        .dataAndBackupHint: "Архив, экспорт, хранение",
+        .aboutHint: "Версия, канал, разработчик",
 
         .profileCard: "Карточка профиля",
         .showIds: "Показывать ID",

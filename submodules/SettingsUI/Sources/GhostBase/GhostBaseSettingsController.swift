@@ -871,6 +871,7 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
     case toggle(Int32, Int32, String, String, Bool)
     case input(Int32, Int32, String, String, String)
     case disclosure(Int32, Int32, String, String, GhostBaseSettingsPage)
+    case disclosureDetail(Int32, Int32, String, String, String, GhostBaseSettingsPage)
     case valueDisclosure(Int32, Int32, String, String, String?, GhostBaseSettingsPage)
     case selector(Int32, Int32, String, String)
     case stylePreview(Int32, Int32, String)
@@ -890,6 +891,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .input(section, _, _, _, _):
             return section
         case let .disclosure(section, _, _, _, _):
+            return section
+        case let .disclosureDetail(section, _, _, _, _, _):
             return section
         case let .valueDisclosure(section, _, _, _, _, _):
             return section
@@ -919,6 +922,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .input(section, index, _, _, _):
             return section * 1000 + index
         case let .disclosure(section, index, _, _, _):
+            return section * 1000 + index
+        case let .disclosureDetail(section, index, _, _, _, _):
             return section * 1000 + index
         case let .valueDisclosure(section, index, _, _, _, _):
             return section * 1000 + index
@@ -965,6 +970,16 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
                 return ls == rs
                     && li == ri
                     && lt == rt
+                    && lIcon == rIcon
+                    && lPage.title == rPage.title
+            }
+            return false
+        case let .disclosureDetail(ls, li, lt, lSub, lIcon, lPage):
+            if case let .disclosureDetail(rs, ri, rt, rSub, rIcon, rPage) = rhs {
+                return ls == rs
+                    && li == ri
+                    && lt == rt
+                    && lSub == rSub
                     && lIcon == rIcon
                     && lPage.title == rPage.title
             }
@@ -1066,6 +1081,22 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
                 style: .blocks,
                 updated: { updatedValue in
                     arguments.updateBool(key, updatedValue)
+                }
+            )
+
+        case let .disclosureDetail(_, _, title, subtitle, iconName, page):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                systemStyle: .glass,
+                icon: jerkgramSettingsMenuIcon(iconName),
+                title: title,
+                label: subtitle,
+                labelStyle: .detailText,
+                sectionId: self.section,
+                style: .blocks,
+                disclosureStyle: .arrow,
+                action: {
+                    arguments.openPage(page)
                 }
             )
 
@@ -1939,15 +1970,15 @@ private func ghostBaseSettingsEntries(
         // belongs inside destinations, not in a new root hero card.
         return [
             .header(0, strings.features),
-            .disclosure(0, 1, strings.basicFunctions, "Jerkgram/Settings/Airplane", .home),
-            .disclosure(0, 2, strings.ghostMode, "Chat/Context Menu/Eye", .ghostMode),
-            .disclosure(0, 3, strings.messages, "Chat/Context Menu/MessageBubble", .messages),
-            .disclosure(0, 4, strings.protectedContent, "Premium/CopyProtection/NoForward", .protectedContent),
-            .disclosure(0, 5, strings.mediaAndStories, "Item List/Icons/Stories", .mediaStories),
-            .disclosure(0, 6, strings.appearance, "Chat/Context Menu/ApplyTheme", .appearance),
-            .disclosure(0, 7, strings.debugResearch, "Chat/Context Menu/FormatCode", .debugResearch),
-            .disclosure(0, 8, strings.dataAndBackup, "Item List/Icons/Stories", .dataAndBackup),
-            .disclosure(0, 9, strings.about, "Chat/Context Menu/Info", .about)
+            .disclosureDetail(0, 1, strings.basicFunctions, strings.basicFunctionsHint, "Jerkgram/Settings/Airplane", .home),
+            .disclosureDetail(0, 2, strings.ghostMode, strings.ghostModeHint, "Chat/Context Menu/Eye", .ghostMode),
+            .disclosureDetail(0, 3, strings.messages, strings.messagesHint, "Chat/Context Menu/MessageBubble", .messages),
+            .disclosureDetail(0, 4, strings.protectedContent, strings.protectedContentHint, "Premium/CopyProtection/NoForward", .protectedContent),
+            .disclosureDetail(0, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "Item List/Icons/Stories", .mediaStories),
+            .disclosureDetail(0, 6, strings.appearance, strings.appearanceHint, "Chat/Context Menu/ApplyTheme", .appearance),
+            .disclosureDetail(0, 7, strings.debugResearch, strings.debugResearchHint, "Chat/Context Menu/FormatCode", .debugResearch),
+            .disclosureDetail(0, 8, strings.dataAndBackup, strings.dataAndBackupHint, "Item List/Icons/Stories", .dataAndBackup),
+            .disclosureDetail(0, 9, strings.about, strings.aboutHint, "Chat/Context Menu/Info", .about)
         ]
     }
 
