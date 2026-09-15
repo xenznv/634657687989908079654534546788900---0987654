@@ -25,6 +25,7 @@ public enum JerkgramStringKey: String, CaseIterable {
     case debugResearchHint
     case dataAndBackupHint
     case aboutHint
+    case profileCard
     case showIds
     case showDcs
     case registrationDate
