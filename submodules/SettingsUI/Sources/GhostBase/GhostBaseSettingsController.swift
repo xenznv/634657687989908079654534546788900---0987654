@@ -2581,22 +2581,11 @@ private func ghostBaseSettingsPageController(
         let updated = stateValue.modify { current in
             let next = f(current)
 
-            let ghostBaseVisualSettingsChanged = false
-
             jerkgramPersistChangedSettings(
                 accountPeerId: context.account.peerId.toInt64(),
                 previous: current,
                 current: next
             )
-
-            if ghostBaseVisualSettingsChanged {
-                NotificationCenter.default.post(
-                    name: Notification.Name(
-                        "jerkgram.ProfileVisualSettingsDidChange.V11M"
-                    ),
-                    object: nil
-                )
-            }
 
             return next
         }
