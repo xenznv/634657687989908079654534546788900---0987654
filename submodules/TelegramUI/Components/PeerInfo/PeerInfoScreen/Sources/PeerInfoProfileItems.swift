@@ -322,7 +322,7 @@ func infoItems(
                 metricItems.append(
                     PeerInfoScreenLabeledValueItem(
                         id: itemId,
-                        label: presentationData.strings.registrationDate,
+                        label: presentationData.strings.jerkgram.registrationDate,
                         text: fullText,
                         textColor: .primary,
                         action: { _, _ in
