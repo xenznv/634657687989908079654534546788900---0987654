@@ -357,7 +357,7 @@ private final class JerkgramSettingsSearchContainerNode: SearchDisplayController
         self.replaceEntries(entries: jerkgramSettingsSearchEntries(query: nil, strings: presentationData.strings.jerkgram), forceUpdate: true)
     }
 
-    func updatePresentationData(_ presentationData: PresentationData) {
+    override func updatePresentationData(_ presentationData: PresentationData) {
         self.presentationData = presentationData
         self.listNode.backgroundColor = presentationData.theme.chatList.backgroundColor
     }
