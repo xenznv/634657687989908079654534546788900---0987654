@@ -256,7 +256,7 @@ public func stringForMessageTimestampStatus(
     }
     
     if ghostBaseShowCharacterCount && !message.text.isEmpty {
-        let characterCount = (message.text as NSString).length
+        let characterCount = message.text.count
         dateText = "[\(characterCount)] \(dateText)"
     }
     

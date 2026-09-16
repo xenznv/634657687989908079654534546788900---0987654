@@ -20,6 +20,130 @@ import BoostLevelIconComponent
 private let enabledPublicBioEntities: EnabledEntityTypes = [.allUrl, .mention, .hashtag]
 private let enabledPrivateBioEntities: EnabledEntityTypes = [.internalUrl, .mention, .hashtag]
 
+// Known Telegram IDs mapped to their registration timestamps (seconds).
+// Anchor data points, sorted by ID; non-monotonic timestamps are smoothed
+// with a running max so the table is strictly non-decreasing.
+private let ghostBaseRegistrationAnchors: [(Int64, Double)] = {
+    let raw: [(Int64, Double)] = [
+        (2768409, 1383264000),
+        (7679610, 1388448000),
+        (11538514, 1391212000),
+        (15835244, 1392940000),
+        (23646077, 1393459000),
+        (38015510, 1393632000),
+        (44634663, 1399334000),
+        (46145305, 1400198000),
+        (54845238, 1411257000),
+        (63263518, 1414454000),
+        (101260938, 1425600000),
+        (101323197, 1426204000),
+        (103151531, 1433376000),
+        (103258382, 1432771000),
+        (109393468, 1439078000),
+        (111220210, 1429574000),
+        (112594714, 1439683000),
+        (116812045, 1437696000),
+        (122600695, 1437782000),
+        (124872445, 1439856000),
+        (125828524, 1444003000),
+        (130029930, 1441324000),
+        (133909606, 1444176000),
+        (143445125, 1448928000),
+        (148670295, 1452211000),
+        (152079341, 1453420000),
+        (157242073, 1446768000),
+        (171295414, 1457481000),
+        (181783990, 1460246000),
+        (222021233, 1465344000),
+        (225034354, 1466208000),
+        (278941742, 1473465000),
+        (285253072, 1476835000),
+        (294851037, 1479600000),
+        (297621225, 1481846000),
+        (328594461, 1482969000),
+        (337808429, 1487707000),
+        (341546272, 1487782000),
+        (352940995, 1487894000),
+        (369669043, 1490918000),
+        (400169472, 1501459000),
+        (805158066, 1563208000),
+        (1974255900, 1634000000),
+        (5520018289, 1721847912)
+    ]
+    var result: [(Int64, Double)] = []
+    var currentMax = -Double.greatestFiniteMagnitude
+    for (id, timestamp) in raw.sorted(by: { $0.0 < $1.0 }) {
+        let value = max(timestamp, currentMax)
+        result.append((id, value))
+        currentMax = value
+    }
+    return result
+}()
+
+private func ghostBaseEstimateRegistrationDate(id: Int64) -> (month: Int32, year: Int32)? {
+    let anchors = ghostBaseRegistrationAnchors
+    guard !anchors.isEmpty else {
+        return nil
+    }
+    let telegramLaunch: Double = 1375315200 // 2013-08-01
+    let now = Date().timeIntervalSince1970
+    let estimated: Double
+    if id <= anchors[0].0 {
+        if anchors.count >= 2 {
+            let (id0, ts0) = anchors[0]
+            let (id1, ts1) = anchors[1]
+            let slope = (ts1 - ts0) / Double(id1 - id0)
+            estimated = max(telegramLaunch, ts0 - slope * Double(id0 - id))
+        } else {
+            estimated = telegramLaunch
+        }
+    } else if id >= anchors[anchors.count - 1].0 {
+        if anchors.count >= 2 {
+            let (id0, ts0) = anchors[anchors.count - 2]
+            let (id1, ts1) = anchors[anchors.count - 1]
+            let slope = (ts1 - ts0) / Double(id1 - id0)
+            estimated = min(now, ts1 + slope * Double(id - id1))
+        } else {
+            estimated = min(now, anchors[anchors.count - 1].1)
+        }
+    } else {
+        var lower = anchors[0]
+        var upper = anchors[anchors.count - 1]
+        for i in 1..<anchors.count {
+            if anchors[i].0 >= id {
+                lower = anchors[i - 1]
+                upper = anchors[i]
+                break
+            }
+        }
+        let span = Double(upper.0 - lower.0)
+        let ratio = span > 0 ? Double(id - lower.0) / span : 0
+        estimated = lower.1 + ratio * (upper.1 - lower.1)
+    }
+    let date = Date(timeIntervalSince1970: estimated)
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+    let components = calendar.dateComponents([.month, .year], from: date)
+    guard let month = components.month, let year = components.year else {
+        return nil
+    }
+    return (Int32(month - 1), Int32(year))
+}
+
+private func ghostBaseMonthYear(fromTimestamp timestamp: Int32) -> (month: Int32, year: Int32)? {
+    guard timestamp > 0 else {
+        return nil
+    }
+    let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
+    let components = calendar.dateComponents([.month, .year], from: date)
+    guard let month = components.month, let year = components.year else {
+        return nil
+    }
+    return (Int32(month - 1), Int32(year))
+}
+
 struct GhostBaseProfileMetricsSettings {
     let enabled: Bool
     let showIds: Bool
@@ -132,16 +256,109 @@ func infoItems(
             itemId += 1
         }
 
+        if ghostBaseMetricsSettings.showRegistration {
+            var dateText: String?
+            var approximate = false
+            if let cachedData = data.cachedData as? CachedUserData,
+               let registrationDate = cachedData.peerStatusSettings?.registrationDate {
+                let components = registrationDate.components(
+                    separatedBy: "."
+                )
+
+                if components.count == 2,
+                   let monthValue = Int32(components[0]),
+                   let yearValue = Int32(components[1]) {
+                    dateText = stringForMonth(
+                        strings: presentationData.strings,
+                        month: monthValue - 1,
+                        ofYear: yearValue - 1900
+                    )
+                }
+            }
+            if dateText == nil {
+                switch peer {
+                case .user:
+                    // Users and bots share the same ID space; the exact date
+                    // is rarely available, so estimate it from the ID.
+                    if let estimate = ghostBaseEstimateRegistrationDate(id: peer.id.id._internalGetInt64Value()) {
+                        dateText = stringForMonth(
+                            strings: presentationData.strings,
+                            month: estimate.month,
+                            ofYear: estimate.year - 1900
+                        )
+                        approximate = true
+                    }
+                case let .channel(channel):
+                    if let monthYear = ghostBaseMonthYear(fromTimestamp: channel.creationDate) {
+                        dateText = stringForMonth(
+                            strings: presentationData.strings,
+                            month: monthYear.month,
+                            ofYear: monthYear.year - 1900
+                        )
+                    }
+                case let .legacyGroup(group):
+                    if let monthYear = ghostBaseMonthYear(fromTimestamp: group.creationDate) {
+                        dateText = stringForMonth(
+                            strings: presentationData.strings,
+                            month: monthYear.month,
+                            ofYear: monthYear.year - 1900
+                        )
+                    }
+                case let .community(community):
+                    if let monthYear = ghostBaseMonthYear(fromTimestamp: community.creationDate) {
+                        dateText = stringForMonth(
+                            strings: presentationData.strings,
+                            month: monthYear.month,
+                            ofYear: monthYear.year - 1900
+                        )
+                    }
+                default:
+                    break
+                }
+            }
+            if let dateText = dateText {
+                let fullText = approximate ? "~ \(dateText)" : dateText
+
+                metricItems.append(
+                    PeerInfoScreenLabeledValueItem(
+                        id: itemId,
+                        label: presentationData.strings.registrationDate,
+                        text: fullText,
+                        textColor: .primary,
+                        action: { _, _ in
+                            UIPasteboard.general.string = fullText
+                        },
+                        longTapAction: { _ in
+                            UIPasteboard.general.string = fullText
+                        },
+                        requestLayout: { _ in
+                            interaction.requestLayout(false)
+                        }
+                    )
+                )
+                itemId += 1
+            }
+        }
+
         if ghostBaseMetricsSettings.showDCs,
            let representation = peer.smallProfileImage,
            let resource = representation.resource
                 as? CloudPeerPhotoSizeMediaResource {
-            let dcText = String(resource.datacenterId)
+            let dcText = "DC: \(resource.datacenterId)"
+            let dcLocation: String
+            switch resource.datacenterId {
+                case 1: dcLocation = "Miami, US"
+                case 2: dcLocation = "Amsterdam, NL"
+                case 3: dcLocation = "Miami, US"
+                case 4: dcLocation = "New York, US"
+                case 5: dcLocation = "Singapore, SG"
+                default: dcLocation = "Unknown"
+            }
 
             metricItems.append(PeerInfoScreenLabeledValueItem(
                     id: itemId,
-                    label: "DC",
-                    text: dcText,
+                    label: dcText,
+                    text: dcLocation,
                     textColor: .primary,
                     action: { _, _ in
                         UIPasteboard.general.string = dcText
@@ -155,43 +372,6 @@ func infoItems(
                 )
             )
             itemId += 1
-        }
-
-        if ghostBaseMetricsSettings.showRegistration,
-           let cachedData = data.cachedData as? CachedUserData,
-           let registrationDate =
-                cachedData.peerStatusSettings?.registrationDate {
-            let components = registrationDate.components(
-                separatedBy: "."
-            )
-
-            if components.count == 2,
-               let monthValue = Int32(components[0]),
-               let yearValue = Int32(components[1]) {
-                let dateText = stringForMonth(
-                    strings: presentationData.strings,
-                    month: monthValue - 1,
-                    ofYear: yearValue - 1900
-                )
-
-                metricItems.append(
-                    PeerInfoScreenLabeledValueItem(
-                        id: itemId,
-                        label: "Дата регистрации",
-                        text: dateText,
-                        textColor: .primary,
-                        action: { _, _ in
-                            UIPasteboard.general.string = dateText
-                        },
-                        longTapAction: { _ in
-                            UIPasteboard.general.string = dateText
-                        },
-                        requestLayout: { _ in
-                            interaction.requestLayout(false)
-                        }
-                    )
-                )
-            }
         }
 
         if !metricItems.isEmpty {

@@ -7,6 +7,8 @@ import PresentationStrings
 // fallback. Persisted Jerkgram data stores semantic values, not translations.
 public enum JerkgramStringKey: String, CaseIterable {
     case settingsTitle
+    case searchSettings
+    case searchSettingsHint
     case basicFunctions
     case ghostMode
     case messages
@@ -178,6 +180,8 @@ public struct JerkgramStrings {
     }
 
     public var settingsTitle: String { self.text(.settingsTitle) }
+    public var searchSettings: String { self.text(.searchSettings) }
+    public var searchSettingsHint: String { self.text(.searchSettingsHint) }
     public var basicFunctions: String { self.text(.basicFunctions) }
     public var ghostMode: String { self.text(.ghostMode) }
     public var messages: String { self.text(.messages) }
@@ -404,6 +408,8 @@ public struct JerkgramStrings {
 
     private static let english: [JerkgramStringKey: String] = [
         .settingsTitle: "Jerkgram",
+        .searchSettings: "Search settings",
+        .searchSettingsHint: "Find a Jerkgram option",
         .basicFunctions: "Basic Functions",
         .ghostMode: "Ghost Mode",
         .messages: "Messages",
@@ -548,6 +554,8 @@ public struct JerkgramStrings {
 
     private static let russian: [JerkgramStringKey: String] = [
         .settingsTitle: "Jerkgram",
+        .searchSettings: "Поиск настроек",
+        .searchSettingsHint: "Найти настройку Jerkgram",
         .basicFunctions: "Основные функции",
         .ghostMode: "Режим призрака",
         .messages: "Сообщения",

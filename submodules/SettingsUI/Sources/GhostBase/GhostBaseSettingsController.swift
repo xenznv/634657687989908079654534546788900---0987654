@@ -731,8 +731,9 @@ private func jerkgramSettingsMenuIcon(
     )
 }
 
-private enum GhostBaseSettingsPage: Equatable {
+enum GhostBaseSettingsPage: Equatable {
     case root
+    case search
     case dataAndBackup
     case stars
     case home
@@ -748,6 +749,8 @@ private enum GhostBaseSettingsPage: Equatable {
         switch self {
         case .root:
             return "Jerkgram"
+        case .search:
+            return "Search"
         case .dataAndBackup:
             return "Data and Backup"
         case .stars:
@@ -776,6 +779,8 @@ private enum GhostBaseSettingsPage: Equatable {
         switch self {
         case .root:
             return strings.settingsTitle
+        case .search:
+            return strings.searchSettings
         case .dataAndBackup:
             return strings.dataAndBackup
         case .stars:
@@ -1784,16 +1789,16 @@ private func ghostBaseSettingsEntries(
 
 
     if page == .root {
-        // Keep the agreed Telegram-native destination list. Presentation work
-        // belongs inside destinations, not in a new root hero card.
+        // Telegram-native destination list; icons intentionally omitted.
         return [
             .header(0, strings.features),
-            .disclosureDetail(0, 1, strings.basicFunctions, strings.basicFunctionsHint, "Jerkgram/Settings/Airplane", .home),
-            .disclosureDetail(0, 2, strings.ghostMode, strings.ghostModeHint, "Chat/Context Menu/Eye", .ghostMode),
-            .disclosureDetail(0, 3, strings.messages, strings.messagesHint, "Chat/Context Menu/MessageBubble", .messages),
-            .disclosureDetail(0, 4, strings.protectedContent, strings.protectedContentHint, "Premium/CopyProtection/NoForward", .protectedContent),
-            .disclosureDetail(0, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "Item List/Icons/Stories", .mediaStories),
-            .disclosureDetail(0, 6, strings.dataAndBackup, strings.dataAndBackupHint, "Item List/Icons/Stories", .dataAndBackup)
+            .disclosureDetail(1, 0, strings.searchSettings, strings.searchSettingsHint, "", .search),
+            .disclosureDetail(1, 1, strings.basicFunctions, strings.basicFunctionsHint, "", .home),
+            .disclosureDetail(1, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
+            .disclosureDetail(1, 3, strings.messages, strings.messagesHint, "", .messages),
+            .disclosureDetail(1, 4, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
+            .disclosureDetail(1, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "", .mediaStories),
+            .disclosureDetail(1, 6, strings.dataAndBackup, strings.dataAndBackupHint, "", .dataAndBackup)
         ]
     }
 
@@ -2550,7 +2555,7 @@ private func ghostBaseSendStylePageController(
     )
 }
 
-private func ghostBaseSettingsPageController(
+func ghostBaseSettingsPageController(
     context: AccountContext,
     page: GhostBaseSettingsPage
 ) -> ViewController {
@@ -3525,6 +3530,8 @@ private func ghostBaseSettingsPageController(
             pushController?(jerkgramDataAndBackupController(context: context))
         } else if selectedPage == .stars {
             pushController?(jerkgramStarsEditorController(context: context))
+        } else if selectedPage == .search {
+            pushController?(jerkgramSettingsSearchController(context: context))
         } else {
             pushController?(
                 ghostBaseSettingsPageController(
