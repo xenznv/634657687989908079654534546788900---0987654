@@ -1868,16 +1868,15 @@ private func ghostBaseSettingsEntries(
         // Telegram-native destination list; icons intentionally omitted.
         let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "12.9.2"
         return [
-            .header(0, strings.features),
-            .disclosureDetail(1, 0, strings.searchSettings, strings.searchSettingsHint, "", .search),
-            .disclosureDetail(1, 1, strings.basicFunctions, strings.basicFunctionsHint, "", .home),
-            .disclosureDetail(1, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
-            .disclosureDetail(1, 3, strings.messages, strings.messagesHint, "", .messages),
-            .disclosureDetail(1, 4, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
-            .disclosureDetail(1, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "", .mediaStories),
-            .disclosureDetail(1, 6, strings.dataAndBackup, strings.dataAndBackupHint, "", .dataAndBackup),
-            .info(2, strings.appVersionLine(version)),
-            .aboutLink(3, strings.about, strings.aboutHint, .about)
+            .info(0, strings.appVersionLine(version)),
+            .aboutLink(1, strings.about, strings.aboutHint, .about),
+            .disclosureDetail(2, 0, strings.searchSettings, strings.searchSettingsHint, "", .search),
+            .disclosureDetail(2, 1, strings.basicFunctions, strings.basicFunctionsHint, "", .home),
+            .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
+            .disclosureDetail(2, 3, strings.messages, strings.messagesHint, "", .messages),
+            .disclosureDetail(2, 4, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
+            .disclosureDetail(2, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "", .mediaStories),
+            .disclosureDetail(2, 6, strings.dataAndBackup, strings.dataAndBackupHint, "", .dataAndBackup)
         ]
     }
 
