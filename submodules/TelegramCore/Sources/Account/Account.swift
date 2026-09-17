@@ -978,6 +978,7 @@ public enum JerkgramHotSettings {
         "jerkgram.ProtectedContent.OneTimeSave",
         "jerkgram.ProtectedContent.OneTimeScreenRecording",
         "jerkgram.ProtectedContent.OneTimeScreenshots",
+        "jerkgram.ProtectedContent.ShowRestricted",
     ]
     private static let lock = NSLock()
     private static var snapshot: [String: Any]?

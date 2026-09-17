@@ -62,6 +62,7 @@ private enum GhostBaseKey {
     static let oneTimeScreenRecording = "jerkgram.ProtectedContent.OneTimeScreenRecording"
     static let oneTimeSave = "jerkgram.ProtectedContent.OneTimeSave"
     static let storySave = "jerkgram.Stories.Save"
+    static let showRestricted = "jerkgram.ProtectedContent.ShowRestricted"
     static let localStarsEnabled = "jerkgram.Stars.LocalBalance.Enabled"
     static let localStarsAmount = "jerkgram.Stars.LocalBalance.Amount"
     static let localStarsBaseAmount = "jerkgram.Stars.LocalBalance.BaseAmount"
@@ -476,6 +477,7 @@ private func jerkgramStateValues(_ state: GhostBaseSettingsState) -> [String: Je
         GhostBaseKey.oneTimeScreenRecording: .bool(state.oneTimeScreenRecording),
         GhostBaseKey.oneTimeSave: .bool(state.oneTimeSave),
         GhostBaseKey.storySave: .bool(state.storySave),
+        GhostBaseKey.showRestricted: .bool(state.showRestricted),
         GhostBaseKey.localStarsEnabled: .bool(state.localStarsEnabled),
         GhostBaseKey.localStarsAmount: .string(state.localStarsAmount),
         GhostBaseKey.localStarsBaseAmount: .string(state.localStarsBaseAmount)
@@ -607,6 +609,7 @@ struct GhostBaseSettingsState: Equatable {
     var oneTimeScreenRecording: Bool
     var oneTimeSave: Bool
     var storySave: Bool
+    var showRestricted: Bool
     var localStarsEnabled: Bool
     var localStarsAmount: String
     var localStarsBaseAmount: String
@@ -681,6 +684,7 @@ struct GhostBaseSettingsState: Equatable {
             oneTimeScreenRecording: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.oneTimeScreenRecording, defaultValue: false),
             oneTimeSave: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.oneTimeSave, defaultValue: false),
             storySave: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.storySave, defaultValue: false),
+            showRestricted: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.showRestricted, defaultValue: true),
             localStarsEnabled: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.localStarsEnabled, defaultValue: false),
             localStarsAmount: jerkgramScopedString(accountPeerId: accountPeerId, key: GhostBaseKey.localStarsAmount, defaultValue: "0"),
             localStarsBaseAmount: jerkgramScopedString(accountPeerId: accountPeerId, key: GhostBaseKey.localStarsBaseAmount, defaultValue: "0")
@@ -783,7 +787,7 @@ enum GhostBaseSettingsPage: Equatable {
         case .stars:
             return "Stars"
         case .home:
-            return "Basic Functions"
+            return "Info Display"
         case .ghostMode:
             return "Ghost Mode"
         case .messages:
@@ -813,7 +817,7 @@ enum GhostBaseSettingsPage: Equatable {
         case .stars:
             return strings.starsBalance
         case .home:
-            return strings.basicFunctions
+            return strings.infoDisplay
         case .ghostMode:
             return strings.ghostMode
         case .messages:
@@ -1871,12 +1875,10 @@ private func ghostBaseSettingsEntries(
             .info(0, strings.appVersionLine(version)),
             .aboutLink(1, strings.about, strings.aboutHint, .about),
             .disclosureDetail(2, 0, strings.searchSettings, strings.searchSettingsHint, "", .search),
-            .disclosureDetail(2, 1, strings.basicFunctions, strings.basicFunctionsHint, "", .home),
+            .disclosureDetail(2, 1, strings.messages, strings.messagesHint, "", .messages),
             .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
-            .disclosureDetail(2, 3, strings.messages, strings.messagesHint, "", .messages),
-            .disclosureDetail(2, 4, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
-            .disclosureDetail(2, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "", .mediaStories),
-            .disclosureDetail(2, 6, strings.dataAndBackup, strings.dataAndBackupHint, "", .dataAndBackup)
+            .disclosureDetail(2, 3, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
+            .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home)
         ]
     }
 
@@ -1892,24 +1894,17 @@ private func ghostBaseSettingsEntries(
     }
 
     if page == .home {
-        let balance = state.localStarsAmount.isEmpty
-            ? "0"
-            : state.localStarsAmount
-
         return [
             .header(0, strings.profileInformation),
             .toggle(0, 1, GhostBaseKey.profileEnabled, strings.showProfileInformation, state.profileEnabled),
             .toggle(0, 2, GhostBaseKey.showIds, strings.telegramId, state.showIds),
             .toggle(0, 3, GhostBaseKey.showDCs, strings.avatarDc, state.showDCs),
             .toggle(0, 4, GhostBaseKey.showRegistration, strings.registrationDate, state.showRegistration),
-            .header(1, strings.basicFunctions),
+            .header(1, strings.messages),
             .toggle(1, 40, GhostBaseKey.messageSeconds, strings.messageSeconds, state.messageSeconds),
             .toggle(1, 41, GhostBaseKey.messageCharacterCount, strings.messageCharacterCount, state.messageCharacterCount),
             .toggle(1, 42, GhostBaseKey.hideOwnPhone, strings.hideMyPhone, state.hideOwnPhone),
-            .info(1, strings.hidePhoneHint),
-            .valueDisclosure(1, 50, strings.starsBalance, strings.starsOverrideSummary(state.localStarsEnabled, balance), nil, .stars),
-            .header(2, strings.backup),
-            .disclosure(2, 1, strings.dataAndBackup, "Item List/Icons/Stories", .dataAndBackup)
+            .info(1, strings.hidePhoneHint)
         ]
     }
 
@@ -2006,15 +2001,10 @@ private func ghostBaseSettingsEntries(
     if page == .protectedContent {
         return [
             .header(0, strings.protectedContent),
-            .toggle(0, 1, GhostBaseKey.protectedEnabled, strings.protectionEnabled, state.protectedEnabled),
-            .toggle(0, 2, GhostBaseKey.protectedGalleryShare, strings.shareFromGallery, state.protectedGalleryShare),
-            .toggle(0, 3, GhostBaseKey.protectedGallerySave, strings.saveFromGallery, state.protectedGallerySave),
-            .toggle(0, 4, GhostBaseKey.protectedGalleryCopy, strings.copyFromGallery, state.protectedGalleryCopy),
-            .toggle(0, 5, GhostBaseKey.chatSave, strings.saveFromChat, state.chatSave),
-            .toggle(0, 6, GhostBaseKey.chatCopy, strings.copyFromChat, state.chatCopy),
-            .toggle(0, 7, GhostBaseKey.chatForward, strings.forwardFromChat, state.chatForward),
-            .toggle(0, 8, GhostBaseKey.allowScreenshots, strings.allowScreenshots, state.allowScreenshots),
-            .toggle(0, 9, GhostBaseKey.allowScreenRecording, strings.allowScreenRecording, state.allowScreenRecording)
+            .toggle(0, 1, GhostBaseKey.protectedEnabled, strings.bypassAll, state.protectedEnabled),
+            .info(0, strings.bypassAllHint),
+            .toggle(0, 2, GhostBaseKey.showRestricted, strings.showHiddenChats, state.showRestricted),
+            .info(0, strings.showHiddenChatsHint)
         ]
     }
 
@@ -3546,6 +3536,8 @@ func ghostBaseSettingsPageController(
                 updated.oneTimeSave = value
             case GhostBaseKey.storySave:
                 updated.storySave = value
+            case GhostBaseKey.showRestricted:
+                updated.showRestricted = value
             case GhostBaseKey.localStarsEnabled:
                 updated.localStarsEnabled = value
             case GhostBaseKey.readMessages:
@@ -3590,26 +3582,9 @@ func ghostBaseSettingsPageController(
                 updated.oneTimeScreenRecording = value
                 updated.oneTimeSave = value
                 updated.storySave = value
-            case GhostBaseKey.protectedGalleryShare:
-                updated.protectedGalleryShare = value
-                updated.protectedEnabled = updated.protectedGalleryShare || updated.protectedGallerySave || updated.protectedGalleryCopy
-
-            case GhostBaseKey.protectedGallerySave:
-                updated.protectedGallerySave = value
-                updated.protectedEnabled = updated.protectedGalleryShare || updated.protectedGallerySave || updated.protectedGalleryCopy
-
-            case GhostBaseKey.protectedGalleryCopy:
-                updated.protectedGalleryCopy = value
-                updated.protectedEnabled = updated.protectedGalleryShare || updated.protectedGallerySave || updated.protectedGalleryCopy
 
             default:
                 break
-            }
-
-            if !updated.protectedGalleryShare && !updated.protectedGallerySave && !updated.protectedGalleryCopy && !updated.chatSave && !updated.chatCopy && !updated.chatForward && !updated.allowScreenshots && !updated.allowScreenRecording && !updated.oneTimeScreenshots && !updated.oneTimeScreenRecording && !updated.oneTimeSave && !updated.storySave {
-                updated.protectedEnabled = false
-            } else if updated.protectedGalleryShare || updated.protectedGallerySave || updated.protectedGalleryCopy || updated.chatSave || updated.chatCopy || updated.chatForward || updated.allowScreenshots || updated.allowScreenRecording || updated.oneTimeScreenshots || updated.oneTimeScreenRecording || updated.oneTimeSave || updated.storySave {
-                updated.protectedEnabled = true
             }
 
             return updated

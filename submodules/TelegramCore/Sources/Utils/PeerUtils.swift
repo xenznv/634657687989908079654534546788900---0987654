@@ -20,6 +20,11 @@ public extension Peer {
     }
     
     func restrictionText(platform: String, contentSettings: ContentSettings) -> String? {
+        // Jerkgram: "Open chats hidden by Telegram rules" — the server sends
+        // restricted content in full, the app hides it, so ignore all flags.
+        if (JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.ShowRestricted") as? Bool) ?? true {
+            return nil
+        }
         var restrictionInfo: PeerAccessRestrictionInfo?
         switch self {
         case let user as TelegramUser:

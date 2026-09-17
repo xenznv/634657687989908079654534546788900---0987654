@@ -10,6 +10,11 @@ public enum JerkgramStringKey: String, CaseIterable {
     case searchSettings
     case searchSettingsHint
     case basicFunctions
+    case infoDisplay
+    case bypassAll
+    case bypassAllHint
+    case showHiddenChats
+    case showHiddenChatsHint
     case ghostMode
     case messages
     case protectedContent
@@ -19,6 +24,7 @@ public enum JerkgramStringKey: String, CaseIterable {
     case about
 
     case basicFunctionsHint
+    case infoDisplayHint
     case ghostModeHint
     case messagesHint
     case protectedContentHint
@@ -189,6 +195,12 @@ public struct JerkgramStrings {
     public var searchSettings: String { self.text(.searchSettings) }
     public var searchSettingsHint: String { self.text(.searchSettingsHint) }
     public var basicFunctions: String { self.text(.basicFunctions) }
+    public var infoDisplay: String { self.text(.infoDisplay) }
+    public var infoDisplayHint: String { self.text(.infoDisplayHint) }
+    public var bypassAll: String { self.text(.bypassAll) }
+    public var bypassAllHint: String { self.text(.bypassAllHint) }
+    public var showHiddenChats: String { self.text(.showHiddenChats) }
+    public var showHiddenChatsHint: String { self.text(.showHiddenChatsHint) }
     public var ghostMode: String { self.text(.ghostMode) }
     public var messages: String { self.text(.messages) }
     public var protectedContent: String { self.text(.protectedContent) }
@@ -424,6 +436,12 @@ public struct JerkgramStrings {
         .searchSettings: "Search settings",
         .searchSettingsHint: "Find a Jerkgram option",
         .basicFunctions: "Basic Functions",
+        .infoDisplay: "Info Display",
+        .infoDisplayHint: "Profile info, messages, phone",
+        .bypassAll: "Bypass all Telegram restrictions",
+        .bypassAllHint: "One switch for everything: saving, copying and forwarding protected content, screenshots, screen recording, and saving or capturing view-once media.",
+        .showHiddenChats: "Open chats hidden by Telegram rules",
+        .showHiddenChatsHint: "Channels, groups and individual messages can be flagged as restricted by Telegram's rules, App Store requirements or local law. The server still sends the content in full — it is the app that hides it, so the flag can be ignored. Does not apply to child abuse material, and does not help with channels Telegram has deleted or banned: there the server sends nothing at all.",
         .ghostMode: "Ghost Mode",
         .messages: "Messages",
         .protectedContent: "Protected Content",
@@ -576,6 +594,12 @@ public struct JerkgramStrings {
         .searchSettings: "Поиск настроек",
         .searchSettingsHint: "Найти настройку Jerkgram",
         .basicFunctions: "Основные функции",
+        .infoDisplay: "Отображение информации",
+        .infoDisplayHint: "Профиль, сообщения, телефон",
+        .bypassAll: "Обход всех ограничений Telegram",
+        .bypassAllHint: "Один переключатель для всего: сохранение, копирование и пересылка защищённого контента, скриншоты, запись экрана, а также сохранение и захват медиа с одиночным просмотром.",
+        .showHiddenChats: "Открывать чаты, скрытые по правилам Telegram",
+        .showHiddenChatsHint: "Каналы, группы и отдельные сообщения могут быть помечены как ограниченные правилами Telegram, требованиями App Store или местным законодательством. Сервер присылает контент полностью — скрывает его само приложение, поэтому флаг можно игнорировать. Не относится к материалам с несовершеннолетними и не помогает с удалёнными или забаненными каналами: там сервер не присылает ничего.",
         .ghostMode: "Режим призрака",
         .messages: "Сообщения",
         .protectedContent: "Защищённый контент",

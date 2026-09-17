@@ -18,6 +18,11 @@ public extension EngineRawMessage {
 
 public extension RestrictedContentMessageAttribute {
     func platformText(platform: String, contentSettings: ContentSettings) -> String? {
+        // Jerkgram: "Open chats hidden by Telegram rules" — the server sends
+        // restricted content in full, the app hides it, so ignore all flags.
+        if (JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.ShowRestricted") as? Bool) ?? true {
+            return nil
+        }
         for rule in self.rules {
             if rule.reason == "sensitive" {
                 continue

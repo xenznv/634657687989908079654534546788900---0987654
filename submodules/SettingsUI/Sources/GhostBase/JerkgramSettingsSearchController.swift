@@ -35,7 +35,7 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     }
 
     // Root destinations
-    add(strings.basicFunctions, strings.basicFunctionsHint, strings.basicFunctionsHint, "basic profile id dc registration stars backup", .home)
+    add(strings.infoDisplay, strings.infoDisplayHint, strings.infoDisplayHint, "info display profile id dc registration seconds phone", .home)
     add(strings.ghostMode, strings.ghostModeHint, strings.ghostModeHint, "ghost online read typing recording upload presence", .ghostMode)
     add(strings.messages, strings.messagesHint, strings.messagesHint, "messages deleted edited history", .messages)
     add(strings.protectedContent, strings.protectedContentHint, strings.protectedContentHint, "protected screenshot save copy forward", .protectedContent)
@@ -50,7 +50,7 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.messageSeconds, "Show seconds in message timestamps", "Показывать секунды во времени сообщений", "seconds time timestamp clock", .home)
     add(strings.messageCharacterCount, "Show the character count of messages", "Показывать счётчик символов сообщений", "character count symbols counter", .home)
     add(strings.hideMyPhone, "Hide your phone number", "Скрыть ваш номер телефона", "phone number hide", .home)
-    add(strings.starsBalance, "Override the displayed stars balance", "Изменить отображаемый баланс звёзд", "stars balance", .home)
+    add(strings.starsBalance, "Override the displayed stars balance", "Изменить отображаемый баланс звёзд", "stars balance", .stars)
 
     // Ghost Mode
     add(strings.readGhost, "Do not send read receipts", "Не отправлять отметки о прочтении", "read receipts double check", .ghostMode)
@@ -75,7 +75,8 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.hideBlockedReactions, "Hide reactions locally", "Скрывать реакции локально", "blocked reactions hide", .messages)
 
     // Protected Content
-    add(strings.protectionEnabled, "Master switch for content protection bypass", "Главный переключатель обхода защиты контента", "protection enabled master", .protectedContent)
+    add(strings.bypassAll, strings.bypassAllHint, strings.bypassAllHint, "bypass all restrictions protection save copy forward screenshot screen recording view once", .protectedContent)
+    add(strings.showHiddenChats, strings.showHiddenChatsHint, strings.showHiddenChatsHint, "open hidden chats restricted channels sensitive censored", .protectedContent)
     add(strings.shareFromGallery, "Share protected media from the gallery", "Делиться защищёнными медиа из галереи", "gallery share bypass", .protectedContent)
     add(strings.saveFromGallery, "Save protected media to the gallery", "Сохранять защищённые медиа в галерею", "gallery save bypass", .protectedContent)
     add(strings.copyFromGallery, "Copy protected media", "Копировать защищённые медиа", "gallery copy bypass", .protectedContent)
@@ -99,7 +100,7 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
 private func jerkgramSearchLocalizedPageTitle(page: GhostBaseSettingsPage, strings: JerkgramStrings) -> String {
     switch page {
     case .home:
-        return strings.basicFunctions
+        return strings.infoDisplay
     case .ghostMode:
         return strings.ghostMode
     case .messages:
