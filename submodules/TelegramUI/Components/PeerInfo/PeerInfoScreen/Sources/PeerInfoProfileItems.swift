@@ -129,21 +129,6 @@ private func ghostBaseEstimateRegistrationDate(id: Int64) -> (month: Int32, year
     }
     return (Int32(month - 1), Int32(year))
 }
-
-private func ghostBaseMonthYear(fromTimestamp timestamp: Int32) -> (month: Int32, year: Int32)? {
-    guard timestamp > 0 else {
-        return nil
-    }
-    let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = TimeZone(identifier: "UTC") ?? .current
-    let components = calendar.dateComponents([.month, .year], from: date)
-    guard let month = components.month, let year = components.year else {
-        return nil
-    }
-    return (Int32(month - 1), Int32(year))
-}
-
 struct GhostBaseProfileMetricsSettings {
     let enabled: Bool
     let showIds: Bool
@@ -289,28 +274,16 @@ func infoItems(
                         approximate = true
                     }
                 case let .channel(channel):
-                    if let monthYear = ghostBaseMonthYear(fromTimestamp: channel.creationDate) {
-                        dateText = stringForMonth(
-                            strings: presentationData.strings,
-                            month: monthYear.month,
-                            ofYear: monthYear.year - 1900
-                        )
+                    if channel.creationDate > 0 {
+                        dateText = stringForDate(timestamp: channel.creationDate, strings: presentationData.strings)
                     }
                 case let .legacyGroup(group):
-                    if let monthYear = ghostBaseMonthYear(fromTimestamp: group.creationDate) {
-                        dateText = stringForMonth(
-                            strings: presentationData.strings,
-                            month: monthYear.month,
-                            ofYear: monthYear.year - 1900
-                        )
+                    if group.creationDate > 0 {
+                        dateText = stringForDate(timestamp: group.creationDate, strings: presentationData.strings)
                     }
                 case let .community(community):
-                    if let monthYear = ghostBaseMonthYear(fromTimestamp: community.creationDate) {
-                        dateText = stringForMonth(
-                            strings: presentationData.strings,
-                            month: monthYear.month,
-                            ofYear: monthYear.year - 1900
-                        )
+                    if community.creationDate > 0 {
+                        dateText = stringForDate(timestamp: community.creationDate, strings: presentationData.strings)
                     }
                 default:
                     break

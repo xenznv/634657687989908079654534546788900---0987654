@@ -15,6 +15,7 @@ import MergeLists
 // One searchable option of the Jerkgram settings.
 private struct JerkgramSearchOption {
     let title: String
+    let description: String
     let keywords: String
     let page: GhostBaseSettingsPage
 
@@ -28,68 +29,71 @@ private struct JerkgramSearchOption {
 private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearchOption] {
     var options: [JerkgramSearchOption] = []
 
-    func add(_ title: String, _ keywords: String, _ page: GhostBaseSettingsPage) {
-        options.append(JerkgramSearchOption(title: title, keywords: keywords, page: page))
+    let russian = strings.languageCode == "ru"
+    func add(_ title: String, _ descriptionEn: String, _ descriptionRu: String, _ keywords: String, _ page: GhostBaseSettingsPage) {
+        options.append(JerkgramSearchOption(title: title, description: russian ? descriptionRu : descriptionEn, keywords: keywords, page: page))
     }
 
     // Root destinations
-    add(strings.basicFunctions, "basic profile id dc registration stars backup", .home)
-    add(strings.ghostMode, "ghost online read typing recording upload presence", .ghostMode)
-    add(strings.messages, "messages deleted edited history", .messages)
-    add(strings.protectedContent, "protected screenshot save copy forward", .protectedContent)
-    add(strings.mediaAndStories, "media stories one time", .mediaStories)
-    add(strings.dataAndBackup, "data backup retention archive", .dataAndBackup)
+    add(strings.basicFunctions, strings.basicFunctionsHint, strings.basicFunctionsHint, "basic profile id dc registration stars backup", .home)
+    add(strings.ghostMode, strings.ghostModeHint, strings.ghostModeHint, "ghost online read typing recording upload presence", .ghostMode)
+    add(strings.messages, strings.messagesHint, strings.messagesHint, "messages deleted edited history", .messages)
+    add(strings.protectedContent, strings.protectedContentHint, strings.protectedContentHint, "protected screenshot save copy forward", .protectedContent)
+    add(strings.mediaAndStories, strings.mediaAndStoriesHint, strings.mediaAndStoriesHint, "media stories one time", .mediaStories)
+    add(strings.dataAndBackup, strings.dataAndBackupHint, strings.dataAndBackupHint, "data backup retention archive", .dataAndBackup)
 
     // Basic Functions
-    add(strings.showProfileInformation, "profile information id dc", .home)
-    add(strings.telegramId, "id identifier", .home)
-    add(strings.avatarDc, "dc data center", .home)
-    add(strings.registrationDate, "registration date", .home)
-    add(strings.messageSeconds, "seconds time timestamp clock", .home)
-    add(strings.messageCharacterCount, "character count symbols counter", .home)
-    add(strings.hideMyPhone, "phone number hide", .home)
-    add(strings.starsBalance, "stars balance", .home)
+    add(strings.profileCard, "Show ID, DC and registration date in profiles", "Показывать ID, DC и дату регистрации в профилях", "profile information id dc", .home)
+    add(strings.telegramId, "Show the Telegram ID row in profiles", "Показывать строку Telegram ID в профилях", "id identifier", .home)
+    add(strings.showDcs, "Show the data center of an account", "Показывать дата-центр аккаунта", "dc data center", .home)
+    add(strings.registrationDate, "Show the account registration date", "Показывать дату регистрации аккаунта", "registration date", .home)
+    add(strings.messageSeconds, "Show seconds in message timestamps", "Показывать секунды во времени сообщений", "seconds time timestamp clock", .home)
+    add(strings.messageCharacterCount, "Show the character count of messages", "Показывать счётчик символов сообщений", "character count symbols counter", .home)
+    add(strings.hideMyPhone, "Hide your phone number", "Скрыть ваш номер телефона", "phone number hide", .home)
+    add(strings.starsBalance, "Override the displayed stars balance", "Изменить отображаемый баланс звёзд", "stars balance", .home)
 
     // Ghost Mode
-    add(strings.readGhost, "read receipts double check", .ghostMode)
-    add(strings.typing, "typing status", .ghostMode)
-    add(strings.recording, "recording voice", .ghostMode)
-    add(strings.uploading, "uploading video", .ghostMode)
-    add(strings.choosingSticker, "sticker activity", .ghostMode)
-    add(strings.gameActivity, "game activity", .ghostMode)
-    add(strings.choosingEmoji, "emoji activity", .ghostMode)
-    add(strings.hideOnline, "online status last seen presence", .ghostMode)
-    add(strings.scheduledSend, "scheduled send delay", .ghostMode)
+    add(strings.readGhost, "Do not send read receipts", "Не отправлять отметки о прочтении", "read receipts double check", .ghostMode)
+    add(strings.typing, "Hide the typing status", "Скрыть статус набора текста", "typing status", .ghostMode)
+    add(strings.recording, "Hide the voice recording status", "Скрыть статус записи голосовых", "recording voice", .ghostMode)
+    add(strings.uploading, "Hide the video uploading status", "Скрыть статус загрузки видео", "uploading video", .ghostMode)
+    add(strings.choosingSticker, "Hide the sticker choosing status", "Скрыть статус выбора стикера", "sticker activity", .ghostMode)
+    add(strings.gameActivity, "Hide the game playing status", "Скрыть статус игры", "game activity", .ghostMode)
+    add(strings.choosingEmoji, "Hide the emoji choosing status", "Скрыть статус выбора эмодзи", "emoji activity", .ghostMode)
+    add(strings.hideOnline, "Nobody sees you online", "Никто не видит, что вы онлайн", "online status last seen presence", .ghostMode)
+    add(strings.scheduledSend, "Delay outgoing messages", "Задержка отправки исходящих сообщений", "scheduled send delay", .ghostMode)
 
     // Messages
-    add(strings.saveDeletedMessages, "save deleted messages", .messages)
-    add(strings.deletedMessages, "show deleted messages", .messages)
-    add(strings.saveEditHistory, "save edit history", .messages)
-    add(strings.editHistory, "show edit history", .messages)
-    add(strings.portableReply, "deleted replies portable reply", .messages)
-    add(strings.saveDeletedMedia, "deleted media keep", .messages)
-    add(strings.sendStyle, "send style text formatting", .messages)
-    add(strings.hideBlockedMessages, "blocked messages hide", .messages)
-    add(strings.hideBlockedReactions, "blocked reactions hide", .messages)
+    add(strings.saveDeletedMessages, "Keep deleted messages locally", "Сохранять удалённые сообщения локально", "save deleted messages", .messages)
+    add(strings.deletedMessages, "Show deleted messages in the chat", "Показывать удалённые сообщения в чате", "show deleted messages", .messages)
+    add(strings.saveEditHistory, "Keep previous versions of edited messages", "Сохранять прошлые версии изменённых сообщений", "save edit history", .messages)
+    add(strings.editHistory, "Show the edit history of messages", "Показывать историю редактирования сообщений", "show edit history", .messages)
+    add(strings.portableReply, "Reply to deleted messages", "Отвечать на удалённые сообщения", "deleted replies portable reply", .messages)
+    add(strings.saveDeletedMedia, "Keep media of deleted messages", "Сохранять медиа удалённых сообщений", "deleted media keep", .messages)
+    add(strings.sendStyle, "Choose how your text is sent", "Выбрать формат отправки текста", "send style text formatting", .messages)
+    add(strings.hideBlockedMessages, "Hide blocked messages locally", "Скрывать заблокированные сообщения локально", "blocked messages hide", .messages)
+    add(strings.hideBlockedReactions, "Hide reactions locally", "Скрывать реакции локально", "blocked reactions hide", .messages)
 
     // Protected Content
-    add(strings.protectionEnabled, "protection enabled master", .protectedContent)
-    add(strings.shareFromGallery, "gallery share bypass", .protectedContent)
-    add(strings.saveFromGallery, "gallery save bypass", .protectedContent)
-    add(strings.copyFromGallery, "gallery copy bypass", .protectedContent)
-    add(strings.saveFromChat, "chat save bypass", .protectedContent)
-    add(strings.copyFromChat, "chat copy bypass", .protectedContent)
-    add(strings.forwardFromChat, "chat forward bypass", .protectedContent)
-    add(strings.allowScreenshots, "screenshots allow", .protectedContent)
-    add(strings.allowScreenRecording, "screen recording allow", .protectedContent)
+    add(strings.protectionEnabled, "Master switch for content protection bypass", "Главный переключатель обхода защиты контента", "protection enabled master", .protectedContent)
+    add(strings.shareFromGallery, "Share protected media from the gallery", "Делиться защищёнными медиа из галереи", "gallery share bypass", .protectedContent)
+    add(strings.saveFromGallery, "Save protected media to the gallery", "Сохранять защищённые медиа в галерею", "gallery save bypass", .protectedContent)
+    add(strings.copyFromGallery, "Copy protected media", "Копировать защищённые медиа", "gallery copy bypass", .protectedContent)
+    add(strings.saveFromChat, "Save protected media from chats", "Сохранять защищённые медиа из чатов", "chat save bypass", .protectedContent)
+    add(strings.copyFromChat, "Copy protected media from chats", "Копировать защищённые медиа из чатов", "chat copy bypass", .protectedContent)
+    add(strings.forwardFromChat, "Forward protected messages", "Пересылать защищённые сообщения", "chat forward bypass", .protectedContent)
+    add(strings.allowScreenshots, "Allow screenshots in protected chats", "Разрешить скриншоты в защищённых чатах", "screenshots allow", .protectedContent)
+    add(strings.allowScreenRecording, "Allow screen recording in protected chats", "Разрешить запись экрана в защищённых чатах", "screen recording allow", .protectedContent)
 
     // Media & Stories
-    add(strings.oneTimeScreenshots, "one time screenshots view once", .mediaStories)
-    add(strings.oneTimeScreenRecording, "one time screen recording", .mediaStories)
-    add(strings.oneTimeMedia, "one time media save", .mediaStories)
-    add(strings.storySave, "stories save bypass", .mediaStories)
+    add(strings.oneTimeScreenshots, "Screenshot view-once media", "Скриншотить медиа с одиночным просмотром", "one time screenshots view once", .mediaStories)
+    add(strings.oneTimeScreenRecording, "Screen-record view-once media", "Записывать экран поверх медиа с одиночным просмотром", "one time screen recording", .mediaStories)
+    add(strings.oneTimeMedia, "Save view-once media", "Сохранять медиа с одиночным просмотром", "one time media save", .mediaStories)
+    add(strings.storySave, "Save stories of any account", "Сохранять истории любого аккаунта", "stories save bypass", .mediaStories)
 
-    return options
+    return options.sorted {
+        $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+    }
 }
 
 private func jerkgramSearchLocalizedPageTitle(page: GhostBaseSettingsPage, strings: JerkgramStrings) -> String {
@@ -210,8 +214,9 @@ private func jerkgramSettingsSearchEntries(
     let registry = jerkgramSearchRegistry(strings: strings)
 
     let loweredQuery = query?.lowercased() ?? ""
+    // With an empty query the full option list is shown, sorted A to Z.
     let filtered = loweredQuery.isEmpty
-        ? []
+        ? registry
         : registry.filter { $0.matches(query: loweredQuery) }
 
     guard !filtered.isEmpty else {
@@ -221,11 +226,10 @@ private func jerkgramSettingsSearchEntries(
     }
 
     var entries: [JerkgramSettingsSearchEntry] = []
-    entries.append(.header(0, strings.features))
     var index: Int32 = 1
     for option in filtered {
         let pageSubtitle = jerkgramSearchLocalizedPageTitle(page: option.page, strings: strings)
-        entries.append(.option(0, index, option.title, pageSubtitle, option.page))
+        entries.append(.option(0, index, option.title, "\(pageSubtitle) · \(option.description)", option.page))
         index += 1
     }
     return entries

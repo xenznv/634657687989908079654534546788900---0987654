@@ -731,6 +731,33 @@ private func jerkgramSettingsMenuIcon(
     )
 }
 
+private func jerkgramAboutMenuIcon(
+    _ name: String
+) -> UIImage? {
+    let background: UInt32
+
+    switch name {
+    case "Jerkgram/About/GitHub":
+        background = 0x4E5259
+    case "Jerkgram/About/Channel":
+        background = 0x5B8FB5
+    case "Jerkgram/About/Bot":
+        background = 0x6A9B72
+    default:
+        return nil
+    }
+
+    return renderSettingsIcon(
+        name: name,
+        scaleFactor: 1.0,
+        backgroundColors: [
+            UIColor(
+                rgb: background
+            )
+        ]
+    )
+}
+
 enum GhostBaseSettingsPage: Equatable {
     case root
     case search
@@ -874,6 +901,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
     case disclosure(Int32, Int32, String, String, GhostBaseSettingsPage)
     case disclosureDetail(Int32, Int32, String, String, String, GhostBaseSettingsPage)
     case valueDisclosure(Int32, Int32, String, String, String?, GhostBaseSettingsPage)
+    case aboutLink(Int32, String, String, GhostBaseSettingsPage)
+    case aboutCard(Int32, Int32, String, String)
     case selector(Int32, Int32, String, String)
     case stylePreview(Int32, Int32, String)
     case aboutChannel(Int32, Int32, String, EnginePeer?, String, Bool)
@@ -896,6 +925,10 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .disclosureDetail(section, _, _, _, _, _):
             return section
         case let .valueDisclosure(section, _, _, _, _, _):
+            return section
+        case let .aboutLink(section, _, _, _):
+            return section
+        case let .aboutCard(section, _, _, _):
             return section
         case let .selector(section, _, _, _):
             return section
@@ -927,6 +960,10 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .disclosureDetail(section, index, _, _, _, _):
             return section * 1000 + index
         case let .valueDisclosure(section, index, _, _, _, _):
+            return section * 1000 + index
+        case let .aboutLink(section, _, _, _):
+            return section * 1000 + 500
+        case let .aboutCard(section, index, _, _):
             return section * 1000 + index
         case let .selector(section, index, _, _):
             return section * 1000 + index
@@ -1016,6 +1053,16 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
             if case let .valueDisclosure(rs, ri, rt, rv, rIcon, rPage) = rhs {
                 return ls == rs && li == ri && lt == rt && lv == rv
                     && lIcon == rIcon && lPage.title == rPage.title
+            }
+            return false
+        case let .aboutLink(ls, lt, lsub, lPage):
+            if case let .aboutLink(rs, rt, rsub, rPage) = rhs {
+                return ls == rs && lt == rt && lsub == rsub && lPage.title == rPage.title
+            }
+            return false
+        case let .aboutCard(ls, li, lt, lIcon):
+            if case let .aboutCard(rs, ri, rt, rIcon) = rhs {
+                return ls == rs && li == ri && lt == rt && lIcon == rIcon
             }
             return false
         case let .info(ls, lt):
@@ -1250,6 +1297,35 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
                 action: {
                     arguments.openPage(page)
                 }
+            )
+
+        case let .aboutLink(_, title, subtitle, page):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                systemStyle: .glass,
+                title: title,
+                label: subtitle,
+                labelStyle: .detailText,
+                sectionId: self.section,
+                style: .blocks,
+                disclosureStyle: .arrow,
+                action: {
+                    arguments.openPage(page)
+                }
+            )
+
+        case let .aboutCard(_, _, title, iconName):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                systemStyle: .glass,
+                icon: jerkgramAboutMenuIcon(iconName),
+                title: title,
+                label: "",
+                labelStyle: .text,
+                sectionId: self.section,
+                style: .blocks,
+                disclosureStyle: .none,
+                action: nil
             )
 
         case let .info(_, text):
@@ -1790,6 +1866,7 @@ private func ghostBaseSettingsEntries(
 
     if page == .root {
         // Telegram-native destination list; icons intentionally omitted.
+        let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "12.9.2"
         return [
             .header(0, strings.features),
             .disclosureDetail(1, 0, strings.searchSettings, strings.searchSettingsHint, "", .search),
@@ -1798,7 +1875,20 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(1, 3, strings.messages, strings.messagesHint, "", .messages),
             .disclosureDetail(1, 4, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
             .disclosureDetail(1, 5, strings.mediaAndStories, strings.mediaAndStoriesHint, "", .mediaStories),
-            .disclosureDetail(1, 6, strings.dataAndBackup, strings.dataAndBackupHint, "", .dataAndBackup)
+            .disclosureDetail(1, 6, strings.dataAndBackup, strings.dataAndBackupHint, "", .dataAndBackup),
+            .info(2, strings.appVersionLine(version)),
+            .aboutLink(3, strings.about, strings.aboutHint, .about)
+        ]
+    }
+
+    if page == .about {
+        return [
+            .aboutCard(0, 1, strings.aboutGithub, "Jerkgram/About/GitHub"),
+            .info(0, strings.aboutGithubNote),
+            .aboutCard(1, 1, strings.aboutChannelLink, "Jerkgram/About/Channel"),
+            .info(1, strings.aboutChannelNote),
+            .aboutCard(2, 1, strings.aboutBotLink, "Jerkgram/About/Bot"),
+            .info(2, strings.aboutBotNote)
         ]
     }
 

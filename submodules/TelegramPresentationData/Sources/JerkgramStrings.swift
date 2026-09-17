@@ -27,6 +27,12 @@ public enum JerkgramStringKey: String, CaseIterable {
     case debugResearchHint
     case dataAndBackupHint
     case aboutHint
+    case aboutGithub
+    case aboutGithubNote
+    case aboutChannelLink
+    case aboutChannelNote
+    case aboutBotLink
+    case aboutBotNote
     case profileCard
     case showIds
     case showDcs
@@ -200,6 +206,13 @@ public struct JerkgramStrings {
     public var debugResearchHint: String { self.text(.debugResearchHint) }
     public var dataAndBackupHint: String { self.text(.dataAndBackupHint) }
     public var aboutHint: String { self.text(.aboutHint) }
+
+    public var aboutGithub: String { self.text(.aboutGithub) }
+    public var aboutGithubNote: String { self.text(.aboutGithubNote) }
+    public var aboutChannelLink: String { self.text(.aboutChannelLink) }
+    public var aboutChannelNote: String { self.text(.aboutChannelNote) }
+    public var aboutBotLink: String { self.text(.aboutBotLink) }
+    public var aboutBotNote: String { self.text(.aboutBotNote) }
 
     public var profileCard: String { self.text(.profileCard) }
     public var showIds: String { self.text(.showIds) }
@@ -428,6 +441,12 @@ public struct JerkgramStrings {
         .debugResearchHint: "Diagnostics and research tools",
         .dataAndBackupHint: "Archive, export, retention",
         .aboutHint: "Version, channel, developer",
+        .aboutGithub: "GitHub",
+        .aboutGithubNote: "New Jerkgram releases are published on GitHub.",
+        .aboutChannelLink: "Telegram Channel",
+        .aboutChannelNote: "News about new builds and updates are posted in the Telegram channel.",
+        .aboutBotLink: "Telegram Bot",
+        .aboutBotNote: "You can reach the developer and share feedback in the Telegram bot.",
 
         .profileCard: "Profile Card",
         .showIds: "Show IDs",
@@ -574,6 +593,12 @@ public struct JerkgramStrings {
         .debugResearchHint: "Диагностика и инструменты исследования",
         .dataAndBackupHint: "Архив, экспорт, хранение",
         .aboutHint: "Версия, канал, разработчик",
+        .aboutGithub: "GitHub",
+        .aboutGithubNote: "На GitHub будут выходить релизы Jerkgram.",
+        .aboutChannelLink: "Телеграм-канал",
+        .aboutChannelNote: "В Телеграм-канале выходят новости о новых сборках и обновлениях.",
+        .aboutBotLink: "Телеграм-бот",
+        .aboutBotNote: "В Телеграм-боте можно поддерживать связь с разработчиком.",
 
         .profileCard: "Карточка профиля",
         .showIds: "Показывать ID",
@@ -777,6 +802,9 @@ public extension JerkgramStrings {
         self.languageCode == "ru"
             ? "Это только локальное отображение баланса. Реальный баланс Telegram не изменяется."
             : "This changes only the local displayed balance. Your real Telegram balance is not modified."
+    }
+    func appVersionLine(_ version: String) -> String {
+        self.languageCode == "ru" ? "Версия \(version)" : "Version \(version)"
     }
     var aboutBuild119Summary: String {
         "Jerkgram\nOfficial Telegram 12.9.2\nBuild 119"
