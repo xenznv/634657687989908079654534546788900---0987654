@@ -139,7 +139,6 @@ public enum JerkgramStringKey: String, CaseIterable {
     case reducedBlur
     case animatedBackgroundHint
     case profileEffectDisabledHint
-    case other
     case interface
     case messageSeconds
     case messageCharacterCount
@@ -373,7 +372,6 @@ public struct JerkgramStrings {
     public var reducedBlur: String { self.text(.reducedBlur) }
     public var animatedBackgroundHint: String { self.text(.animatedBackgroundHint) }
     public var profileEffectDisabledHint: String { self.text(.profileEffectDisabledHint) }
-    public var other: String { self.text(.other) }
     public var interface: String { self.text(.interface) }
     public var messageSeconds: String { self.text(.messageSeconds) }
     public var messageCharacterCount: String { self.text(.messageCharacterCount) }
