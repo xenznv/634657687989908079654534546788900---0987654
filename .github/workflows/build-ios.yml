@@ -135,8 +135,12 @@ jobs:
         run: |
           # The p12 is legacy-encrypted (RC2); macOS system LibreSSL cannot parse it.
           # Point the script at Homebrew OpenSSL 3 via OPENSSL_BIN.
-          brew list openssl@3 >/dev/null 2>&1 || brew install openssl@3
-          OPENSSL_BIN="$(brew --prefix openssl@3)/bin/openssl" \
+          export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_FROM_API=1
+          OPENSSL_BIN="$(brew --prefix openssl@3 2>/dev/null)/bin/openssl"
+          if [ ! -x "$OPENSSL_BIN" ]; then
+            brew install openssl@3
+            OPENSSL_BIN="$(brew --prefix openssl@3)/bin/openssl"
+          fi
           python3 -u build-system/Make/Make.py \
             --overrideXcodeVersion \
             generate-verification-profiles \
