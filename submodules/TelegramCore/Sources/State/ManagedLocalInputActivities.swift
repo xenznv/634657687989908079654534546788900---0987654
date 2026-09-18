@@ -131,6 +131,10 @@ private func actionFromActivity(_ activity: PeerInputActivity?) -> Api.SendMessa
                 return .speakingInGroupCallAction
             case .choosingSticker:
                 return .sendMessageChooseStickerAction
+            case .choosingLocation:
+                return .sendMessageGeoLocationAction
+            case .choosingContact:
+                return .sendMessageChooseContactAction
             case let .interactingWithEmoji(emoticon, messageId, interaction):
                 return .sendMessageEmojiInteraction(.init(emoticon: emoticon, msgId: messageId.id, interaction: interaction?.apiDataJson ?? .dataJSON(.init(data: ""))))
             case let .seeingEmojiInteraction(emoticon):

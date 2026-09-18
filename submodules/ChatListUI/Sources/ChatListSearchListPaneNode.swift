@@ -3352,7 +3352,9 @@ final class ChatListSearchListPaneNode: ASDisplayNode, ChatListSearchPaneNode {
 
                 var numberOfGlobalPeers = 0
                 index = 0
-                if !adsHidden {
+                // Jerkgram: "Remove Ads" also hides sponsored peers in global search.
+                let jerkgramAdsRemoved = ((UserDefaults.standard.object(forKey: "jerkgram.ProtectedContent.Enabled") as? Bool) ?? true) && ((UserDefaults.standard.object(forKey: "jerkgram.ProtectedContent.RemoveAds") as? Bool) ?? false)
+                if !adsHidden && !jerkgramAdsRemoved {
                     for peer in foundRemotePeers.2 {
                         if !existingPeerIds.contains(peer.peer.id), filteredPeer(peer.peer, EnginePeer(accountPeer)) {
                             existingPeerIds.insert(peer.peer.id)

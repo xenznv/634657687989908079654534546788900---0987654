@@ -120,7 +120,8 @@ func managedSynchronizeViewStoriesOperations(postbox: Postbox, network: Network,
 
 private func pushStoriesAreSeen(postbox: Postbox, network: Network, stateManager: AccountStateManager, peer: Peer, operation: SynchronizeViewStoriesOperation) -> Signal<Void, NoError> {
     let ghostBaseReadGhostExtras = (UserDefaults.standard.object(forKey: "jerkgram.GhostMode.ReadMessages") as? Bool) ?? false
-    if ghostBaseReadGhostExtras {
+    let ghostBaseStoryReadGhost = (UserDefaults.standard.object(forKey: "jerkgram.GhostMode.StoryReadReceipts") as? Bool) ?? false
+    if ghostBaseReadGhostExtras || ghostBaseStoryReadGhost {
         return .complete()
     }
 

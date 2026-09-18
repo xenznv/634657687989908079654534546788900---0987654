@@ -14,6 +14,7 @@ private let ghostBaseSplashSafeLoginEnabledKey = "jerkgram.SafeLogin.GhostModeEn
 
 private let ghostBaseSplashGhostModeKeys: [String] = [
     "jerkgram.GhostMode.ReadMessages",
+    "jerkgram.GhostMode.StoryReadReceipts",
     "jerkgram.GhostMode.TypingActions",
     "jerkgram.GhostMode.RecordingActions",
     "jerkgram.GhostMode.UploadingActions",

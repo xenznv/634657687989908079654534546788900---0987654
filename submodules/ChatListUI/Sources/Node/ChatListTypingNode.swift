@@ -62,7 +62,7 @@ final class ChatListInputActivitiesNode: ASDisplayNode {
                                 text = strings.Activity_ChoosingSticker
                             case let .interactingWithEmoji(emoticon, _, _):
                                 text = strings.Activity_TappingInteractiveEmoji(emoticon).string
-                            case .speakingInGroupCall, .seeingEmojiInteraction:
+                            case .speakingInGroupCall, .seeingEmojiInteraction, .choosingLocation, .choosingContact:
                                 text = ""
                         }
                         let string = NSAttributedString(string: text, font: textFont, textColor: color)
@@ -85,6 +85,8 @@ final class ChatListInputActivitiesNode: ASDisplayNode {
                             case .interactingWithEmoji:
                                 state = .interactingWithEmoji(string, lightColor)
                             case .seeingEmojiInteraction:
+                                state = .none
+                            case .choosingLocation, .choosingContact:
                                 state = .none
                         }
                     } else {
@@ -110,7 +112,7 @@ final class ChatListInputActivitiesNode: ASDisplayNode {
                                     text = strings.DialogList_SingleTypingSuffix(peerTitle).string
                                 case .choosingSticker:
                                     text = strings.DialogList_SingleChoosingStickerSuffix(peerTitle).string
-                                case .speakingInGroupCall, .seeingEmojiInteraction, .interactingWithEmoji:
+                                case .speakingInGroupCall, .seeingEmojiInteraction, .interactingWithEmoji, .choosingLocation, .choosingContact:
                                     text = ""
                             }
                         } else {
@@ -134,6 +136,8 @@ final class ChatListInputActivitiesNode: ASDisplayNode {
                             case .choosingSticker:
                                 state = .choosingSticker(string, lightColor)
                             case .seeingEmojiInteraction, .interactingWithEmoji:
+                                state = .none
+                            case .choosingLocation, .choosingContact:
                                 state = .none
                         }
                     }

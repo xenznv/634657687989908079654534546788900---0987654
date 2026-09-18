@@ -5244,7 +5244,7 @@ private func jerkgramBuild135VisibleUnreadCount(
                         if let strongSelf = self {
                             let displayActivities = activities.filter({
                                 switch $0.1 {
-                                    case .speakingInGroupCall, .interactingWithEmoji:
+                                    case .speakingInGroupCall, .interactingWithEmoji, .choosingLocation, .choosingContact:
                                         return false
                                     default:
                                         return true

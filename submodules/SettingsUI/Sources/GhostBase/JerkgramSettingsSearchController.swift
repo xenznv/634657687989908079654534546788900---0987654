@@ -53,15 +53,25 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.starsBalance, "Override the displayed stars balance", "Изменить отображаемый баланс звёзд", "stars balance", .stars)
 
     // Ghost Mode
-    add(strings.readGhost, "Do not send read receipts", "Не отправлять отметки о прочтении", "read receipts double check", .ghostMode)
-    add(strings.typing, "Hide the typing status", "Скрыть статус набора текста", "typing status", .ghostMode)
-    add(strings.recording, "Hide the voice recording status", "Скрыть статус записи голосовых", "recording voice", .ghostMode)
-    add(strings.uploading, "Hide the video uploading status", "Скрыть статус загрузки видео", "uploading video", .ghostMode)
-    add(strings.choosingSticker, "Hide the sticker choosing status", "Скрыть статус выбора стикера", "sticker activity", .ghostMode)
-    add(strings.gameActivity, "Hide the game playing status", "Скрыть статус игры", "game activity", .ghostMode)
-    add(strings.choosingEmoji, "Hide the emoji choosing status", "Скрыть статус выбора эмодзи", "emoji activity", .ghostMode)
-    add(strings.hideOnline, "Nobody sees you online", "Никто не видит, что вы онлайн", "online status last seen presence", .ghostMode)
-    add(strings.scheduledSend, "Delay outgoing messages", "Задержка отправки исходящих сообщений", "scheduled send delay", .ghostMode)
+    add(strings.messageReadReceipts, strings.messageReadReceiptsHint, strings.messageReadReceiptsHint, "read receipts double check messages", .ghostMode)
+    add(strings.storyReadReceipts, strings.storyReadReceiptsHint, strings.storyReadReceiptsHint, "read receipts stories seen view", .ghostMode)
+    add(strings.typing, strings.typingHint, strings.typingHint, "typing status", .ghostMode)
+    add(strings.recording, strings.recordingVoiceHint, strings.recordingVoiceHint, "recording voice message", .ghostMode)
+    add(strings.uploading, strings.uploadingVideoHint, strings.uploadingVideoHint, "uploading video", .ghostMode)
+    add(strings.recording, strings.recordingVideoHint, strings.recordingVideoHint, "recording video round", .ghostMode)
+    add(strings.uploading, strings.uploadingVoiceHint, strings.uploadingVoiceHint, "uploading voice message", .ghostMode)
+    add(strings.uploading, strings.uploadingPhotoHint, strings.uploadingPhotoHint, "uploading photo", .ghostMode)
+    add(strings.uploading, strings.uploadingFileHint, strings.uploadingFileHint, "uploading file document", .ghostMode)
+    add(strings.uploading, strings.uploadingRoundHint, strings.uploadingRoundHint, "uploading round video", .ghostMode)
+    add(strings.choosingSticker, strings.choosingStickerHint, strings.choosingStickerHint, "sticker activity picking", .ghostMode)
+    add(strings.gameActivity, strings.gameActivityHint, strings.gameActivityHint, "game activity playing", .ghostMode)
+    add(strings.choosingEmoji, strings.emojiInteractionHint, strings.emojiInteractionHint, "emoji activity interaction", .ghostMode)
+    add(strings.choosingEmoji, strings.emojiAckHint, strings.emojiAckHint, "emoji acknowledgement reaction", .ghostMode)
+    add(strings.scheduledSend, strings.scheduledSendHint, strings.scheduledSendHint, "scheduled send delay", .ghostMode)
+    add(strings.hideOnline, strings.hideOnlineHint, strings.hideOnlineHint, "online status last seen presence", .ghostMode)
+    add(strings.choosingLocationTitle, strings.choosingLocationHint, strings.choosingLocationHint, "choosing location geo live", .ghostMode)
+    add(strings.choosingContactTitle, strings.choosingContactHint, strings.choosingContactHint, "choosing contact share", .ghostMode)
+    add(strings.speakingGroupCallTitle, strings.speakingGroupCallHint, strings.speakingGroupCallHint, "speaking group call voice chat", .ghostMode)
 
     // Messages
     add(strings.saveDeletedMessages, "Keep deleted messages locally", "Сохранять удалённые сообщения локально", "save deleted messages", .messages)
@@ -76,6 +86,7 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
 
     // Protected Content
     add(strings.bypassAll, strings.bypassAllHint, strings.bypassAllHint, "bypass all restrictions protection save copy forward screenshot screen recording view once", .protectedContent)
+    add(strings.removeAds, strings.removeAdsHint, strings.removeAdsHint, "remove ads sponsored posts channels no advertising premium", .protectedContent)
     add(strings.showHiddenChats, strings.showHiddenChatsHint, strings.showHiddenChatsHint, "open hidden chats restricted channels sensitive censored", .protectedContent)
     add(strings.shareFromGallery, "Share protected media from the gallery", "Делиться защищёнными медиа из галереи", "gallery share bypass", .protectedContent)
     add(strings.saveFromGallery, "Save protected media to the gallery", "Сохранять защищённые медиа в галерею", "gallery save bypass", .protectedContent)
@@ -220,9 +231,15 @@ private func jerkgramSettingsSearchEntries(
         ? registry
         : registry.filter { $0.matches(query: loweredQuery) }
 
-    guard !filtered.isEmpty else {
+    if loweredQuery.isEmpty {
+        guard !filtered.isEmpty else {
+            return [
+                .info(0, strings.searchSettingsHint)
+            ]
+        }
+    } else if filtered.isEmpty {
         return [
-            .info(0, strings.searchSettingsHint)
+            .info(0, strings.searchNothingFound)
         ]
     }
 

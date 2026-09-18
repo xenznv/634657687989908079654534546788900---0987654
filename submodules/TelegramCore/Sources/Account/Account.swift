@@ -905,11 +905,21 @@ public enum AccountNetworkState: Equatable {
 
 private struct JerkgramActivityGhostSettings {
     let typing: Bool
-    let recording: Bool
-    let uploading: Bool
+    let recordingVoice: Bool
+    let recordingVideo: Bool
+    let recordingRound: Bool
+    let uploadingPhoto: Bool
+    let uploadingVideo: Bool
+    let uploadingFile: Bool
+    let uploadingRound: Bool
+    let uploadingVoice: Bool
     let sticker: Bool
     let game: Bool
-    let emoji: Bool
+    let emojiInteraction: Bool
+    let emojiAcknowledgement: Bool
+    let speakingInGroupCall: Bool
+    let choosingLocation: Bool
+    let choosingContact: Bool
 }
 
 public enum JerkgramActivityGhostRuntime {
@@ -927,13 +937,29 @@ public enum JerkgramActivityGhostRuntime {
             func value(_ key: String) -> Bool {
                 return defaults.object(forKey: key) as? Bool ?? false
             }
+            // Legacy combined keys (HideRecording/HideUploading/HideEmojiActivity)
+            // stay authoritative as fallbacks for users who enabled them before
+            // the granular split.
+            func valueOr(_ primary: String, _ fallback: String) -> Bool {
+                return value(primary) || value(fallback)
+            }
             let loaded = JerkgramActivityGhostSettings(
                 typing: value("jerkgram.GhostMode.TypingActions"),
-                recording: value("jerkgram.GhostMode.HideRecording"),
-                uploading: value("jerkgram.GhostMode.HideUploading"),
+                recordingVoice: value("jerkgram.GhostMode.HideRecording"),
+                recordingVideo: valueOr("jerkgram.GhostMode.HideRecordingVideo", "jerkgram.GhostMode.HideRecording"),
+                recordingRound: valueOr("jerkgram.GhostMode.HideRecordingRound", "jerkgram.GhostMode.HideRecording"),
+                uploadingPhoto: valueOr("jerkgram.GhostMode.HideUploadingPhoto", "jerkgram.GhostMode.HideUploading"),
+                uploadingVideo: valueOr("jerkgram.GhostMode.HideUploadingVideo", "jerkgram.GhostMode.HideUploading"),
+                uploadingFile: valueOr("jerkgram.GhostMode.HideUploadingFile", "jerkgram.GhostMode.HideUploading"),
+                uploadingRound: valueOr("jerkgram.GhostMode.HideUploadingRound", "jerkgram.GhostMode.HideUploading"),
+                uploadingVoice: value("jerkgram.GhostMode.HideUploadingVoice"),
                 sticker: value("jerkgram.GhostMode.HideStickerActivity"),
                 game: value("jerkgram.GhostMode.HideGameActivity"),
-                emoji: value("jerkgram.GhostMode.HideEmojiActivity")
+                emojiInteraction: value("jerkgram.GhostMode.HideEmojiActivity"),
+                emojiAcknowledgement: valueOr("jerkgram.GhostMode.HideEmojiAcknowledgement", "jerkgram.GhostMode.HideEmojiActivity"),
+                speakingInGroupCall: value("jerkgram.GhostMode.HideGroupCallSpeaking"),
+                choosingLocation: value("jerkgram.GhostMode.HideChoosingLocation"),
+                choosingContact: value("jerkgram.GhostMode.HideChoosingContact")
             )
             return loaded
         }!
@@ -944,16 +970,32 @@ public enum JerkgramActivityGhostRuntime {
         switch activity {
         case .typingText:
             return settings.typing
-        case .recordingVoice, .recordingInstantVideo:
-            return settings.recording
-        case .uploadingFile(_), .uploadingPhoto(_), .uploadingVideo(_), .uploadingInstantVideo(_):
-            return settings.uploading
+        case .recordingVoice:
+            return settings.recordingVoice
+        case .recordingInstantVideo:
+            return settings.recordingRound
+        case .uploadingPhoto(_):
+            return settings.uploadingPhoto
+        case .uploadingVideo(_):
+            return settings.uploadingVideo
+        case .uploadingFile(_):
+            return settings.uploadingFile
+        case .uploadingInstantVideo(_):
+            return settings.uploadingRound
         case .choosingSticker:
             return settings.sticker
         case .playingGame:
             return settings.game
-        case .interactingWithEmoji(_, _, _), .seeingEmojiInteraction(_):
-            return settings.emoji
+        case .interactingWithEmoji(_, _, _):
+            return settings.emojiInteraction
+        case .seeingEmojiInteraction(_):
+            return settings.emojiAcknowledgement
+        case .speakingInGroupCall(_):
+            return settings.speakingInGroupCall
+        case .choosingLocation:
+            return settings.choosingLocation
+        case .choosingContact:
+            return settings.choosingContact
         default:
             return false
         }
@@ -979,6 +1021,7 @@ public enum JerkgramHotSettings {
         "jerkgram.ProtectedContent.OneTimeScreenRecording",
         "jerkgram.ProtectedContent.OneTimeScreenshots",
         "jerkgram.ProtectedContent.ShowRestricted",
+        "jerkgram.ProtectedContent.RemoveAds",
     ]
     private static let lock = NSLock()
     private static var snapshot: [String: Any]?

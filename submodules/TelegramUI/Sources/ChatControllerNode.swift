@@ -773,7 +773,9 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
             }
         }
         if let displayAdPeer {
-            self.adMessagesContext = context.engine.messages.adMessages(peerId: displayAdPeer, activateManually: true)
+            // Jerkgram: "Remove Ads" bypasses all sponsored/recommended messages.
+            let jerkgramAdsRemoved = ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.Enabled") as? Bool) ?? true) && ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.RemoveAds") as? Bool) ?? false)
+            self.adMessagesContext = jerkgramAdsRemoved ? nil : context.engine.messages.adMessages(peerId: displayAdPeer, activateManually: true)
         } else {
             self.adMessagesContext = nil
         }

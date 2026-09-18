@@ -307,6 +307,7 @@ private let ghostBaseSafeLoginEnabledKey = "jerkgram.SafeLogin.GhostModeEnabled"
 
 private let ghostBaseSafeLoginGhostModeKeys: [String] = [
     "jerkgram.GhostMode.ReadMessages",
+    "jerkgram.GhostMode.StoryReadReceipts",
     "jerkgram.GhostMode.TypingActions",
     "jerkgram.GhostMode.RecordingActions",
     "jerkgram.GhostMode.UploadingActions",

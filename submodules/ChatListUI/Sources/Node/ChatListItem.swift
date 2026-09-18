@@ -5002,7 +5002,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     var animateInputActivitiesFrame = false
                     let inputActivities = inputActivities?.filter({
                         switch $0.1 {
-                            case .speakingInGroupCall, .seeingEmojiInteraction:
+                            case .speakingInGroupCall, .seeingEmojiInteraction, .choosingLocation, .choosingContact:
                                 return false
                             default:
                                 return true

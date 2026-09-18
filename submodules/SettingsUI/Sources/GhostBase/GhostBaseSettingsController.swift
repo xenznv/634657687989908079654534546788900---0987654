@@ -20,12 +20,24 @@ private enum GhostBaseKey {
     static let showRegistration = "jerkgram.Profile.ShowRegistration"
 
     static let readMessages = "jerkgram.GhostMode.ReadMessages"
+    static let storyReadReceipts = "jerkgram.GhostMode.StoryReadReceipts"
     static let typingActions = "jerkgram.GhostMode.TypingActions"
     static let recordingActions = "jerkgram.GhostMode.HideRecording"
+    static let recordingVideo = "jerkgram.GhostMode.HideRecordingVideo"
+    static let recordingRound = "jerkgram.GhostMode.HideRecordingRound"
     static let uploadingActions = "jerkgram.GhostMode.HideUploading"
+    static let uploadingPhoto = "jerkgram.GhostMode.HideUploadingPhoto"
+    static let uploadingVideo = "jerkgram.GhostMode.HideUploadingVideo"
+    static let uploadingFile = "jerkgram.GhostMode.HideUploadingFile"
+    static let uploadingRound = "jerkgram.GhostMode.HideUploadingRound"
+    static let uploadingVoice = "jerkgram.GhostMode.HideUploadingVoice"
     static let stickerActivity = "jerkgram.GhostMode.HideStickerActivity"
     static let gameActivity = "jerkgram.GhostMode.HideGameActivity"
     static let emojiActivity = "jerkgram.GhostMode.HideEmojiActivity"
+    static let emojiAcknowledgement = "jerkgram.GhostMode.HideEmojiAcknowledgement"
+    static let speakingInGroupCall = "jerkgram.GhostMode.HideGroupCallSpeaking"
+    static let choosingLocation = "jerkgram.GhostMode.HideChoosingLocation"
+    static let choosingContact = "jerkgram.GhostMode.HideChoosingContact"
     static let presence = "jerkgram.GhostMode.Presence"
     static let scheduledSend = "jerkgram.GhostMode.ScheduledSend"
 
@@ -63,6 +75,7 @@ private enum GhostBaseKey {
     static let oneTimeSave = "jerkgram.ProtectedContent.OneTimeSave"
     static let storySave = "jerkgram.Stories.Save"
     static let showRestricted = "jerkgram.ProtectedContent.ShowRestricted"
+    static let removeAds = "jerkgram.ProtectedContent.RemoveAds"
     static let localStarsEnabled = "jerkgram.Stars.LocalBalance.Enabled"
     static let localStarsAmount = "jerkgram.Stars.LocalBalance.Amount"
     static let localStarsBaseAmount = "jerkgram.Stars.LocalBalance.BaseAmount"
@@ -444,12 +457,24 @@ private func jerkgramStateValues(_ state: GhostBaseSettingsState) -> [String: Je
         GhostBaseKey.profileBlurTint: .bool(state.profileBlurTint),
         GhostBaseKey.profileBlurReduced: .bool(state.profileBlurReduced),
         GhostBaseKey.readMessages: .bool(state.readMessages),
+        GhostBaseKey.storyReadReceipts: .bool(state.storyReadReceipts),
         GhostBaseKey.typingActions: .bool(state.typingActions),
         GhostBaseKey.recordingActions: .bool(state.recordingActions),
+        GhostBaseKey.recordingVideo: .bool(state.recordingVideo),
+        GhostBaseKey.recordingRound: .bool(state.recordingRound),
         GhostBaseKey.uploadingActions: .bool(state.uploadingActions),
+        GhostBaseKey.uploadingPhoto: .bool(state.uploadingPhoto),
+        GhostBaseKey.uploadingVideo: .bool(state.uploadingVideo),
+        GhostBaseKey.uploadingFile: .bool(state.uploadingFile),
+        GhostBaseKey.uploadingRound: .bool(state.uploadingRound),
+        GhostBaseKey.uploadingVoice: .bool(state.uploadingVoice),
         GhostBaseKey.stickerActivity: .bool(state.stickerActivity),
         GhostBaseKey.gameActivity: .bool(state.gameActivity),
         GhostBaseKey.emojiActivity: .bool(state.emojiActivity),
+        GhostBaseKey.emojiAcknowledgement: .bool(state.emojiAcknowledgement),
+        GhostBaseKey.speakingInGroupCall: .bool(state.speakingInGroupCall),
+        GhostBaseKey.choosingLocation: .bool(state.choosingLocation),
+        GhostBaseKey.choosingContact: .bool(state.choosingContact),
         GhostBaseKey.presence: .bool(state.presence),
         GhostBaseKey.scheduledSend: .bool(state.scheduledSend),
         GhostBaseKey.saveDeleted: .bool(state.saveDeleted),
@@ -478,6 +503,7 @@ private func jerkgramStateValues(_ state: GhostBaseSettingsState) -> [String: Je
         GhostBaseKey.oneTimeSave: .bool(state.oneTimeSave),
         GhostBaseKey.storySave: .bool(state.storySave),
         GhostBaseKey.showRestricted: .bool(state.showRestricted),
+        GhostBaseKey.removeAds: .bool(state.removeAds),
         GhostBaseKey.localStarsEnabled: .bool(state.localStarsEnabled),
         GhostBaseKey.localStarsAmount: .string(state.localStarsAmount),
         GhostBaseKey.localStarsBaseAmount: .string(state.localStarsBaseAmount)
@@ -511,10 +537,23 @@ private func jerkgramPersistChangedSettings(
         GhostBaseKey.hideBlockedReactions,
         GhostBaseKey.typingActions,
         GhostBaseKey.recordingActions,
+        GhostBaseKey.recordingVideo,
+        GhostBaseKey.recordingRound,
         GhostBaseKey.uploadingActions,
+        GhostBaseKey.uploadingPhoto,
+        GhostBaseKey.uploadingVideo,
+        GhostBaseKey.uploadingFile,
+        GhostBaseKey.uploadingRound,
+        GhostBaseKey.uploadingVoice,
         GhostBaseKey.stickerActivity,
         GhostBaseKey.gameActivity,
         GhostBaseKey.emojiActivity,
+        GhostBaseKey.emojiAcknowledgement,
+        GhostBaseKey.speakingInGroupCall,
+        GhostBaseKey.choosingLocation,
+        GhostBaseKey.choosingContact,
+        GhostBaseKey.storyReadReceipts,
+        GhostBaseKey.removeAds,
     ]).union(JerkgramHotSettings.keys)
     let defaults = UserDefaults.standard
     for key in jerkgramSynchronousRuntimeSettingKeys {
@@ -572,12 +611,24 @@ struct GhostBaseSettingsState: Equatable {
     var profileBlurReduced: Bool
 
     var readMessages: Bool
+    var storyReadReceipts: Bool
     var typingActions: Bool
     var recordingActions: Bool
+    var recordingVideo: Bool
+    var recordingRound: Bool
     var uploadingActions: Bool
+    var uploadingPhoto: Bool
+    var uploadingVideo: Bool
+    var uploadingFile: Bool
+    var uploadingRound: Bool
+    var uploadingVoice: Bool
     var stickerActivity: Bool
     var gameActivity: Bool
     var emojiActivity: Bool
+    var emojiAcknowledgement: Bool
+    var speakingInGroupCall: Bool
+    var choosingLocation: Bool
+    var choosingContact: Bool
     var presence: Bool
     var scheduledSend: Bool
 
@@ -610,6 +661,7 @@ struct GhostBaseSettingsState: Equatable {
     var oneTimeSave: Bool
     var storySave: Bool
     var showRestricted: Bool
+    var removeAds: Bool
     var localStarsEnabled: Bool
     var localStarsAmount: String
     var localStarsBaseAmount: String
@@ -625,12 +677,24 @@ struct GhostBaseSettingsState: Equatable {
             profileBlurTint: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.profileBlurTint, defaultValue: true),
             profileBlurReduced: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.profileBlurReduced, defaultValue: false),
             readMessages: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.readMessages, defaultValue: false),
+            storyReadReceipts: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.storyReadReceipts, defaultValue: false),
             typingActions: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.typingActions, defaultValue: false),
             recordingActions: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.recordingActions, defaultValue: false),
+            recordingVideo: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.recordingVideo, defaultValue: false),
+            recordingRound: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.recordingRound, defaultValue: false),
             uploadingActions: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.uploadingActions, defaultValue: false),
+            uploadingPhoto: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.uploadingPhoto, defaultValue: false),
+            uploadingVideo: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.uploadingVideo, defaultValue: false),
+            uploadingFile: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.uploadingFile, defaultValue: false),
+            uploadingRound: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.uploadingRound, defaultValue: false),
+            uploadingVoice: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.uploadingVoice, defaultValue: false),
             stickerActivity: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.stickerActivity, defaultValue: false),
             gameActivity: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.gameActivity, defaultValue: false),
             emojiActivity: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.emojiActivity, defaultValue: false),
+            emojiAcknowledgement: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.emojiAcknowledgement, defaultValue: false),
+            speakingInGroupCall: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.speakingInGroupCall, defaultValue: false),
+            choosingLocation: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.choosingLocation, defaultValue: false),
+            choosingContact: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.choosingContact, defaultValue: false),
             presence: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.presence, defaultValue: false),
             scheduledSend: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.scheduledSend, defaultValue: false),
             saveDeleted: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.saveDeleted, defaultValue: true),
@@ -685,6 +749,7 @@ struct GhostBaseSettingsState: Equatable {
             oneTimeSave: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.oneTimeSave, defaultValue: false),
             storySave: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.storySave, defaultValue: false),
             showRestricted: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.showRestricted, defaultValue: true),
+            removeAds: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.removeAds, defaultValue: false),
             localStarsEnabled: jerkgramScopedBool(accountPeerId: accountPeerId, key: GhostBaseKey.localStarsEnabled, defaultValue: false),
             localStarsAmount: jerkgramScopedString(accountPeerId: accountPeerId, key: GhostBaseKey.localStarsAmount, defaultValue: "0"),
             localStarsBaseAmount: jerkgramScopedString(accountPeerId: accountPeerId, key: GhostBaseKey.localStarsBaseAmount, defaultValue: "0")
@@ -901,6 +966,7 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
     case aboutValue(Int32, Int32, String, String)
     case header(Int32, String)
     case toggle(Int32, Int32, String, String, Bool)
+    case toggleHint(Int32, Int32, String, String, String, Bool)
     case input(Int32, Int32, String, String, String)
     case disclosure(Int32, Int32, String, String, GhostBaseSettingsPage)
     case disclosureDetail(Int32, Int32, String, String, String, GhostBaseSettingsPage)
@@ -921,6 +987,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .aboutValue(section, _, _, _):
             return section
         case let .toggle(section, _, _, _, _):
+            return section
+        case let .toggleHint(section, _, _, _, _, _):
             return section
         case let .input(section, _, _, _, _):
             return section
@@ -956,6 +1024,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .aboutValue(section, index, _, _):
             return section * 1000 + index
         case let .toggle(section, index, _, _, _):
+            return section * 1000 + index
+        case let .toggleHint(section, index, _, _, _, _):
             return section * 1000 + index
         case let .input(section, index, _, _, _):
             return section * 1000 + index
@@ -999,6 +1069,11 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .toggle(ls, li, lk, lt, lv):
             if case let .toggle(rs, ri, rk, rt, rv) = rhs {
                 return ls == rs && li == ri && lk == rk && lt == rt && lv == rv
+            }
+            return false
+        case let .toggleHint(ls, li, lk, lt, lh, lv):
+            if case let .toggleHint(rs, ri, rk, rt, rh, rv) = rhs {
+                return ls == rs && li == ri && lk == rk && lt == rt && lh == rh && lv == rv
             }
             return false
         case let .input(ls, li, lk, lt, lv):
@@ -1128,6 +1203,21 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
                 presentationData: presentationData,
                 systemStyle: .glass,
                 title: title,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateBool(key, updatedValue)
+                }
+            )
+
+        case let .toggleHint(_, _, key, title, hint, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                systemStyle: .glass,
+                title: title,
+                text: hint,
+                maximumNumberOfLines: 3,
                 value: value,
                 sectionId: self.section,
                 style: .blocks,
@@ -1933,15 +2023,30 @@ private func ghostBaseSettingsEntries(
     if page == .ghostMode {
         return [
             .header(0, strings.ghostMode),
-            .toggle(0, 1, GhostBaseKey.readMessages, strings.readGhost, state.readMessages),
-            .toggle(0, 2, GhostBaseKey.typingActions, strings.typing, state.typingActions),
-            .toggle(0, 3, GhostBaseKey.recordingActions, strings.recording, state.recordingActions),
-            .toggle(0, 4, GhostBaseKey.uploadingActions, strings.uploading, state.uploadingActions),
-            .toggle(0, 5, GhostBaseKey.stickerActivity, strings.choosingSticker, state.stickerActivity),
-            .toggle(0, 6, GhostBaseKey.gameActivity, strings.gameActivity, state.gameActivity),
-            .toggle(0, 7, GhostBaseKey.emojiActivity, strings.choosingEmoji, state.emojiActivity),
-            .toggle(0, 8, GhostBaseKey.presence, strings.hideOnline, state.presence),
-            .toggle(0, 9, GhostBaseKey.scheduledSend, strings.scheduledSend, state.scheduledSend)
+            .toggleHint(0, 1, GhostBaseKey.presence, strings.hideOnline, strings.hideOnlineHint, state.presence),
+            .toggleHint(0, 2, GhostBaseKey.typingActions, strings.typing, strings.typingHint, state.typingActions),
+            .toggleHint(0, 3, GhostBaseKey.recordingActions, strings.recordingVoiceTitle, strings.recordingVoiceHint, state.recordingActions),
+            .toggleHint(0, 4, GhostBaseKey.uploadingActions, strings.uploadingVideoTitle, strings.uploadingVideoHint, state.uploadingActions),
+            .toggleHint(0, 5, GhostBaseKey.recordingVideo, strings.recordingVideoTitle, strings.recordingVideoHint, state.recordingVideo),
+            .toggleHint(0, 6, GhostBaseKey.uploadingVoice, strings.uploadingVoiceTitle, strings.uploadingVoiceHint, state.uploadingVoice),
+            .toggleHint(0, 7, GhostBaseKey.uploadingPhoto, strings.uploadingPhotoTitle, strings.uploadingPhotoHint, state.uploadingPhoto),
+            .toggleHint(0, 8, GhostBaseKey.uploadingFile, strings.uploadingFileTitle, strings.uploadingFileHint, state.uploadingFile),
+            .toggleHint(0, 9, GhostBaseKey.choosingLocation, strings.choosingLocationTitle, strings.choosingLocationHint, state.choosingLocation),
+            .toggleHint(0, 10, GhostBaseKey.choosingContact, strings.choosingContactTitle, strings.choosingContactHint, state.choosingContact),
+            .toggleHint(0, 11, GhostBaseKey.gameActivity, strings.gameActivityTitle, strings.gameActivityHint, state.gameActivity),
+            .toggleHint(0, 12, GhostBaseKey.recordingRound, strings.recordingRoundTitle, strings.recordingRoundHint, state.recordingRound),
+            .toggleHint(0, 13, GhostBaseKey.uploadingRound, strings.uploadingRoundTitle, strings.uploadingRoundHint, state.uploadingRound),
+            .toggleHint(0, 14, GhostBaseKey.speakingInGroupCall, strings.speakingGroupCallTitle, strings.speakingGroupCallHint, state.speakingInGroupCall),
+            .toggleHint(0, 15, GhostBaseKey.stickerActivity, strings.choosingStickerTitle, strings.choosingStickerHint, state.stickerActivity),
+            .toggleHint(0, 16, GhostBaseKey.emojiActivity, strings.emojiInteractionTitle, strings.emojiInteractionHint, state.emojiActivity),
+            .toggleHint(0, 17, GhostBaseKey.emojiAcknowledgement, strings.emojiAckTitle, strings.emojiAckHint, state.emojiAcknowledgement),
+
+            .header(1, strings.readReceipts),
+            .toggleHint(1, 1, GhostBaseKey.readMessages, strings.messageReadReceipts, strings.messageReadReceiptsHint, state.readMessages),
+            .toggleHint(1, 2, GhostBaseKey.storyReadReceipts, strings.storyReadReceipts, strings.storyReadReceiptsHint, state.storyReadReceipts),
+
+            .header(2, strings.other),
+            .toggleHint(2, 1, GhostBaseKey.scheduledSend, strings.scheduledSend, strings.scheduledSendHint, state.scheduledSend)
         ]
     }
 
@@ -2004,7 +2109,9 @@ private func ghostBaseSettingsEntries(
             .toggle(0, 1, GhostBaseKey.protectedEnabled, strings.bypassAll, state.protectedEnabled),
             .info(0, strings.bypassAllHint),
             .toggle(0, 2, GhostBaseKey.showRestricted, strings.showHiddenChats, state.showRestricted),
-            .info(0, strings.showHiddenChatsHint)
+            .info(0, strings.showHiddenChatsHint),
+            .toggle(0, 3, GhostBaseKey.removeAds, strings.removeAds, state.removeAds),
+            .info(0, strings.removeAdsHint)
         ]
     }
 
@@ -3547,14 +3654,40 @@ func ghostBaseSettingsPageController(
                 updated.typingActions = value
             case GhostBaseKey.recordingActions:
                 updated.recordingActions = value
+            case GhostBaseKey.recordingVideo:
+                updated.recordingVideo = value
+            case GhostBaseKey.recordingRound:
+                updated.recordingRound = value
             case GhostBaseKey.uploadingActions:
                 updated.uploadingActions = value
+            case GhostBaseKey.uploadingPhoto:
+                updated.uploadingPhoto = value
+            case GhostBaseKey.uploadingVideo:
+                updated.uploadingVideo = value
+            case GhostBaseKey.uploadingFile:
+                updated.uploadingFile = value
+            case GhostBaseKey.uploadingRound:
+                updated.uploadingRound = value
+            case GhostBaseKey.uploadingVoice:
+                updated.uploadingVoice = value
             case GhostBaseKey.stickerActivity:
                 updated.stickerActivity = value
             case GhostBaseKey.gameActivity:
                 updated.gameActivity = value
             case GhostBaseKey.emojiActivity:
                 updated.emojiActivity = value
+            case GhostBaseKey.emojiAcknowledgement:
+                updated.emojiAcknowledgement = value
+            case GhostBaseKey.speakingInGroupCall:
+                updated.speakingInGroupCall = value
+            case GhostBaseKey.choosingLocation:
+                updated.choosingLocation = value
+            case GhostBaseKey.choosingContact:
+                updated.choosingContact = value
+            case GhostBaseKey.storyReadReceipts:
+                updated.storyReadReceipts = value
+            case GhostBaseKey.removeAds:
+                updated.removeAds = value
 
             case GhostBaseKey.presence:
                 updated.presence = value

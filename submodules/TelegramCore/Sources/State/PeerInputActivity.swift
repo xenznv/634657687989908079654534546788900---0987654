@@ -79,6 +79,8 @@ public enum PeerInputActivity: Comparable {
     case choosingSticker
     case interactingWithEmoji(emoticon: String, messageId: MessageId, interaction: EmojiInteraction?)
     case seeingEmojiInteraction(emoticon: String)
+    case choosingLocation
+    case choosingContact
     
     public var key: Int32 {
         switch self {
@@ -106,6 +108,10 @@ public enum PeerInputActivity: Comparable {
                 return 10
             case .seeingEmojiInteraction:
                 return 11
+            case .choosingLocation:
+                return 12
+            case .choosingContact:
+                return 13
         }
     }
     
@@ -117,8 +123,12 @@ public enum PeerInputActivity: Comparable {
 extension PeerInputActivity {
     init?(apiType: Api.SendMessageAction, peerId: PeerId?, timestamp: Int32) {
         switch apiType {
-        case .sendMessageCancelAction, .sendMessageChooseContactAction, .sendMessageGeoLocationAction, .sendMessageRecordVideoAction:
+        case .sendMessageCancelAction, .sendMessageRecordVideoAction:
             return nil
+        case .sendMessageGeoLocationAction:
+            self = .choosingLocation
+        case .sendMessageChooseContactAction:
+            self = .choosingContact
         case .sendMessageGamePlayAction:
             self = .playingGame
         case .sendMessageRecordAudioAction, .sendMessageUploadAudioAction:

@@ -9,10 +9,13 @@ public enum JerkgramStringKey: String, CaseIterable {
     case settingsTitle
     case searchSettings
     case searchSettingsHint
+    case searchNothingFound
     case basicFunctions
     case infoDisplay
     case bypassAll
     case bypassAllHint
+    case removeAds
+    case removeAdsHint
     case showHiddenChats
     case showHiddenChatsHint
     case ghostMode
@@ -56,6 +59,45 @@ public enum JerkgramStringKey: String, CaseIterable {
     case choosingEmoji
     case hideOnline
     case scheduledSend
+    case readReceipts
+    case other
+    case hideOnlineHint
+    case typingHint
+    case recordingVoiceTitle
+    case recordingVoiceHint
+    case recordingVideoTitle
+    case recordingVideoHint
+    case recordingRoundTitle
+    case recordingRoundHint
+    case uploadingVideoTitle
+    case uploadingVideoHint
+    case uploadingVoiceTitle
+    case uploadingVoiceHint
+    case uploadingPhotoTitle
+    case uploadingPhotoHint
+    case uploadingFileTitle
+    case uploadingFileHint
+    case uploadingRoundTitle
+    case uploadingRoundHint
+    case choosingLocationTitle
+    case choosingLocationHint
+    case choosingContactTitle
+    case choosingContactHint
+    case gameActivityTitle
+    case gameActivityHint
+    case speakingGroupCallTitle
+    case speakingGroupCallHint
+    case choosingStickerTitle
+    case choosingStickerHint
+    case emojiInteractionTitle
+    case emojiInteractionHint
+    case emojiAckTitle
+    case emojiAckHint
+    case messageReadReceipts
+    case messageReadReceiptsHint
+    case storyReadReceipts
+    case storyReadReceiptsHint
+    case scheduledSendHint
 
     case deletedMessages
     case saveDeletedMessages
@@ -194,11 +236,14 @@ public struct JerkgramStrings {
     public var settingsTitle: String { self.text(.settingsTitle) }
     public var searchSettings: String { self.text(.searchSettings) }
     public var searchSettingsHint: String { self.text(.searchSettingsHint) }
+    public var searchNothingFound: String { self.text(.searchNothingFound) }
     public var basicFunctions: String { self.text(.basicFunctions) }
     public var infoDisplay: String { self.text(.infoDisplay) }
     public var infoDisplayHint: String { self.text(.infoDisplayHint) }
     public var bypassAll: String { self.text(.bypassAll) }
     public var bypassAllHint: String { self.text(.bypassAllHint) }
+    public var removeAds: String { self.text(.removeAds) }
+    public var removeAdsHint: String { self.text(.removeAdsHint) }
     public var showHiddenChats: String { self.text(.showHiddenChats) }
     public var showHiddenChatsHint: String { self.text(.showHiddenChatsHint) }
     public var ghostMode: String { self.text(.ghostMode) }
@@ -248,6 +293,45 @@ public struct JerkgramStrings {
     public var choosingEmoji: String { self.text(.choosingEmoji) }
     public var hideOnline: String { self.text(.hideOnline) }
     public var scheduledSend: String { self.text(.scheduledSend) }
+    public var readReceipts: String { self.text(.readReceipts) }
+    public var other: String { self.text(.other) }
+    public var hideOnlineHint: String { self.text(.hideOnlineHint) }
+    public var typingHint: String { self.text(.typingHint) }
+    public var recordingVoiceTitle: String { self.text(.recordingVoiceTitle) }
+    public var recordingVoiceHint: String { self.text(.recordingVoiceHint) }
+    public var recordingVideoTitle: String { self.text(.recordingVideoTitle) }
+    public var recordingVideoHint: String { self.text(.recordingVideoHint) }
+    public var recordingRoundTitle: String { self.text(.recordingRoundTitle) }
+    public var recordingRoundHint: String { self.text(.recordingRoundHint) }
+    public var uploadingVideoTitle: String { self.text(.uploadingVideoTitle) }
+    public var uploadingVideoHint: String { self.text(.uploadingVideoHint) }
+    public var uploadingVoiceTitle: String { self.text(.uploadingVoiceTitle) }
+    public var uploadingVoiceHint: String { self.text(.uploadingVoiceHint) }
+    public var uploadingPhotoTitle: String { self.text(.uploadingPhotoTitle) }
+    public var uploadingPhotoHint: String { self.text(.uploadingPhotoHint) }
+    public var uploadingFileTitle: String { self.text(.uploadingFileTitle) }
+    public var uploadingFileHint: String { self.text(.uploadingFileHint) }
+    public var uploadingRoundTitle: String { self.text(.uploadingRoundTitle) }
+    public var uploadingRoundHint: String { self.text(.uploadingRoundHint) }
+    public var choosingLocationTitle: String { self.text(.choosingLocationTitle) }
+    public var choosingLocationHint: String { self.text(.choosingLocationHint) }
+    public var choosingContactTitle: String { self.text(.choosingContactTitle) }
+    public var choosingContactHint: String { self.text(.choosingContactHint) }
+    public var gameActivityTitle: String { self.text(.gameActivityTitle) }
+    public var gameActivityHint: String { self.text(.gameActivityHint) }
+    public var speakingGroupCallTitle: String { self.text(.speakingGroupCallTitle) }
+    public var speakingGroupCallHint: String { self.text(.speakingGroupCallHint) }
+    public var choosingStickerTitle: String { self.text(.choosingStickerTitle) }
+    public var choosingStickerHint: String { self.text(.choosingStickerHint) }
+    public var emojiInteractionTitle: String { self.text(.emojiInteractionTitle) }
+    public var emojiInteractionHint: String { self.text(.emojiInteractionHint) }
+    public var emojiAckTitle: String { self.text(.emojiAckTitle) }
+    public var emojiAckHint: String { self.text(.emojiAckHint) }
+    public var messageReadReceipts: String { self.text(.messageReadReceipts) }
+    public var messageReadReceiptsHint: String { self.text(.messageReadReceiptsHint) }
+    public var storyReadReceipts: String { self.text(.storyReadReceipts) }
+    public var storyReadReceiptsHint: String { self.text(.storyReadReceiptsHint) }
+    public var scheduledSendHint: String { self.text(.scheduledSendHint) }
 
     public var deletedMessages: String { self.text(.deletedMessages) }
     public var saveDeletedMessages: String { self.text(.saveDeletedMessages) }
@@ -435,11 +519,14 @@ public struct JerkgramStrings {
         .settingsTitle: "Jerkgram",
         .searchSettings: "Search settings",
         .searchSettingsHint: "Find a Jerkgram option",
+        .searchNothingFound: "Nothing Found",
         .basicFunctions: "Basic Functions",
         .infoDisplay: "Info Display",
         .infoDisplayHint: "Profile info, messages, phone",
         .bypassAll: "Bypass all Telegram restrictions",
         .bypassAllHint: "One switch for everything: saving, copying and forwarding protected content, screenshots, screen recording, and saving or capturing view-once media.",
+        .removeAds: "Remove Ads",
+        .removeAdsHint: "Hide all sponsored posts in channels and all ads across Telegram without a Premium subscription.",
         .showHiddenChats: "Open chats hidden by Telegram rules",
         .showHiddenChatsHint: "Channels, groups and individual messages can be flagged as restricted by Telegram's rules, App Store requirements or local law. The server still sends the content in full — it is the app that hides it, so the flag can be ignored. Does not apply to child abuse material, and does not help with channels Telegram has deleted or banned: there the server sends nothing at all.",
         .ghostMode: "Ghost Mode",
@@ -483,6 +570,45 @@ public struct JerkgramStrings {
         .choosingEmoji: "Choosing Emoji",
         .hideOnline: "Online Status",
         .scheduledSend: "Scheduled Send",
+        .readReceipts: "Read Receipts",
+        .other: "Other",
+        .hideOnlineHint: "Prevent others from seeing you online.",
+        .typingHint: "Hide when you're typing messages.",
+        .recordingVoiceTitle: "Disable Voice Message Recording Status",
+        .recordingVoiceHint: "Hide when you're recording a voice message.",
+        .recordingVideoTitle: "Disable Recording Video Status",
+        .recordingVideoHint: "Hide when you're recording a video.",
+        .recordingRoundTitle: "Disable Recording Round Video Status",
+        .recordingRoundHint: "Hide when you're recording a round video.",
+        .uploadingVideoTitle: "Disable Uploading Video Status",
+        .uploadingVideoHint: "Hide when you're uploading a video.",
+        .uploadingVoiceTitle: "Disable Voice Message Uploading Status",
+        .uploadingVoiceHint: "Hide when you're uploading a voice message.",
+        .uploadingPhotoTitle: "Disable Uploading Photo Status",
+        .uploadingPhotoHint: "Hide when you're uploading a Photo.",
+        .uploadingFileTitle: "Disable Uploading File Status",
+        .uploadingFileHint: "Hide when you're uploading a file.",
+        .uploadingRoundTitle: "Disable Uploading Round Video Status",
+        .uploadingRoundHint: "Disable Uploading Round Video Status",
+        .choosingLocationTitle: "Disable Choosing Location Status",
+        .choosingLocationHint: "Hide when you're choosing a location.",
+        .choosingContactTitle: "Disable Choosing Contact",
+        .choosingContactHint: "Hide when you're choosing a contact.",
+        .gameActivityTitle: "Disable Playing Game Status",
+        .gameActivityHint: "Hide when you're playing a game.",
+        .speakingGroupCallTitle: "Disable Speaking in Group Call Status",
+        .speakingGroupCallHint: "Hide when you're speaking in a group call.",
+        .choosingStickerTitle: "Disable Choosing Sticker Status",
+        .choosingStickerHint: "Hide when you're picking a sticker.",
+        .emojiInteractionTitle: "Disable Emoji Interaction Status",
+        .emojiInteractionHint: "Hide when you interact with emoji.",
+        .emojiAckTitle: "Disable Emoji Acknowledgement Status",
+        .emojiAckHint: "Hide when you react with emoji to a message.",
+        .messageReadReceipts: "Disable Message Read Receipts",
+        .messageReadReceiptsHint: "Prevent others from seeing you've read their messages.",
+        .storyReadReceipts: "Disable Story Read Receipts",
+        .storyReadReceiptsHint: "Prevent others from seeing you've viewed their stories.",
+        .scheduledSendHint: "Delay outgoing messages.",
 
         .deletedMessages: "Deleted Messages",
         .saveDeletedMessages: "Save Deleted",
@@ -593,11 +719,14 @@ public struct JerkgramStrings {
         .settingsTitle: "Jerkgram",
         .searchSettings: "Поиск настроек",
         .searchSettingsHint: "Найти настройку Jerkgram",
+        .searchNothingFound: "Ничего не найдено",
         .basicFunctions: "Основные функции",
         .infoDisplay: "Отображение информации",
         .infoDisplayHint: "Профиль, сообщения, телефон",
         .bypassAll: "Обход всех ограничений Telegram",
         .bypassAllHint: "Один переключатель для всего: сохранение, копирование и пересылка защищённого контента, скриншоты, запись экрана, а также сохранение и захват медиа с одиночным просмотром.",
+        .removeAds: "Убирать рекламу",
+        .removeAdsHint: "Скрывает все спонсорские посты в каналах и всю рекламу в Telegram без подписки Premium.",
         .showHiddenChats: "Открывать чаты, скрытые по правилам Telegram",
         .showHiddenChatsHint: "Каналы, группы и отдельные сообщения могут быть помечены как ограниченные правилами Telegram, требованиями App Store или местным законодательством. Сервер присылает контент полностью — скрывает его само приложение, поэтому флаг можно игнорировать. Не относится к материалам с несовершеннолетними и не помогает с удалёнными или забаненными каналами: там сервер не присылает ничего.",
         .ghostMode: "Режим призрака",
@@ -641,6 +770,45 @@ public struct JerkgramStrings {
         .choosingEmoji: "Выбор эмодзи",
         .hideOnline: "Онлайн-статус",
         .scheduledSend: "Отложенная отправка",
+        .readReceipts: "Отметки о прочтении",
+        .other: "Прочее",
+        .hideOnlineHint: "Никто не видит, что вы онлайн.",
+        .typingHint: "Скрывает набор текста.",
+        .recordingVoiceTitle: "Скрыть запись голосовых",
+        .recordingVoiceHint: "Скрывает запись голосового сообщения.",
+        .recordingVideoTitle: "Скрыть запись видео",
+        .recordingVideoHint: "Скрывает запись видео.",
+        .recordingRoundTitle: "Скрыть запись круговых видео",
+        .recordingRoundHint: "Скрывает запись кругового видео.",
+        .uploadingVideoTitle: "Скрыть загрузку видео",
+        .uploadingVideoHint: "Скрывает загрузку видео.",
+        .uploadingVoiceTitle: "Скрыть загрузку голосовых",
+        .uploadingVoiceHint: "Скрывает загрузку голосового сообщения.",
+        .uploadingPhotoTitle: "Скрыть загрузку фото",
+        .uploadingPhotoHint: "Скрывает загрузку фото.",
+        .uploadingFileTitle: "Скрыть загрузку файлов",
+        .uploadingFileHint: "Скрывает загрузку файла.",
+        .uploadingRoundTitle: "Скрыть загрузку круговых видео",
+        .uploadingRoundHint: "Скрывает загрузку кругового видео.",
+        .choosingLocationTitle: "Скрыть выбор геолокации",
+        .choosingLocationHint: "Скрывает выбор геолокации.",
+        .choosingContactTitle: "Скрыть выбор контакта",
+        .choosingContactHint: "Скрывает выбор контакта.",
+        .gameActivityTitle: "Скрыть игровой статус",
+        .gameActivityHint: "Скрывает статус игры.",
+        .speakingGroupCallTitle: "Скрыть разговор в звонке",
+        .speakingGroupCallHint: "Скрывает разговор в групповом звонке.",
+        .choosingStickerTitle: "Скрыть выбор стикера",
+        .choosingStickerHint: "Скрывает выбор стикера.",
+        .emojiInteractionTitle: "Скрыть взаимодействие с эмодзи",
+        .emojiInteractionHint: "Скрывает взаимодействие с эмодзи.",
+        .emojiAckTitle: "Скрыть реакции эмодзи",
+        .emojiAckHint: "Скрывает реакции эмодзи на сообщения.",
+        .messageReadReceipts: "Не отмечать сообщения прочитанными",
+        .messageReadReceiptsHint: "Собеседник не видит, что вы прочитали его сообщения.",
+        .storyReadReceipts: "Не отмечать истории просмотренными",
+        .storyReadReceiptsHint: "Автор не видит, что вы смотрели его истории.",
+        .scheduledSendHint: "Задержка отправки исходящих сообщений.",
 
         .deletedMessages: "Удалённые сообщения",
         .saveDeletedMessages: "Сохранять удалённые",

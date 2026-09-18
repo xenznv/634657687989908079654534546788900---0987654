@@ -474,29 +474,6 @@ public final class SecretMediaPreviewController: ViewController {
         }
     }
 
-    @objc private func ghostBaseSaveCurrentTimedMedia() {
-        guard let message = self.messageView?.message else {
-            return
-        }
-
-        let ghostBaseTimedPreviewSave = (((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.Enabled") as? Bool) ?? true) && ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.OneTimeSave") as? Bool) ?? false) && message.id.peerId.namespace != Namespaces.Peer.SecretChat && message.paidContent == nil && message.minAutoremoveOrClearTimeout != nil)
-        guard ghostBaseTimedPreviewSave, let media = mediaForMessage(message: message) else {
-            return
-        }
-
-        let mediaReference: AnyMediaReference
-        if let image = media as? TelegramMediaImage {
-            mediaReference = ImageMediaReference.message(message: MessageReference(message), media: image).abstract
-        } else if let file = media as? TelegramMediaFile {
-            mediaReference = FileMediaReference.message(message: MessageReference(message), media: file).abstract
-        } else {
-            return
-        }
-
-        let _ = (saveToCameraRoll(context: self.context, userLocation: .peer(message.id.peerId), mediaReference: mediaReference)
-        |> deliverOnMainQueue).startStandalone()
-    }
-
     private func dismiss(forceAway: Bool) {
         self.dismissAllTooltips()
 
@@ -538,13 +515,7 @@ public final class SecretMediaPreviewController: ViewController {
             }
         }
         if let message = message {
-            let ghostBaseTimedPreviewSave = (((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.Enabled") as? Bool) ?? true) && ((JerkgramHotSettings.object(forKey: "jerkgram.ProtectedContent.OneTimeSave") as? Bool) ?? false) && message.id.peerId.namespace != Namespaces.Peer.SecretChat && message.paidContent == nil && message.minAutoremoveOrClearTimeout != nil)
-            if ghostBaseTimedPreviewSave, let media = mediaForMessage(message: message) {
-                let saveTitle = media is TelegramMediaFile ? self.presentationData.strings.Gallery_SaveVideo : self.presentationData.strings.Gallery_SaveImage
-                self.navigationItem.rightBarButtonItem = UIBarButtonItem(title: saveTitle, style: .plain, target: self, action: #selector(self.ghostBaseSaveCurrentTimedMedia))
-            } else {
-                self.navigationItem.rightBarButtonItem = nil
-            }
+            self.navigationItem.rightBarButtonItem = nil
 
             if self.currentNodeMessageId != message.id {
                 self.currentNodeMessageId = message.id
