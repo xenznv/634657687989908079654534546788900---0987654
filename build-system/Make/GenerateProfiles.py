@@ -59,14 +59,61 @@ def cleanup_temp_keychain(keychain_name):
     run_executable_with_output('security', arguments=['delete-keychain', keychain_name], check_result=False)
 
 
-def get_signing_identity_from_p12(p12_path, p12_password=''):
-    """Extract the common name (signing identity) from the p12 certificate."""
-    proc = subprocess.Popen(
-        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    cert_pem, _ = proc.communicate()
+def _openssl_extract_cert_pem(p12_path, p12_password=''):
+    """Extract certificates from a p12 via OpenSSL, trying several flag combos.
 
+    Returns the PEM bytes on success, None on failure (with the last stderr
+    printed so the real cause is visible in CI logs).
+    """
+    attempts = [
+        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
+        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-provider', 'legacy', '-provider', 'default'],
+        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys'],
+    ]
+    last_error = ''
+    for cmd in attempts:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        cert_pem, err = proc.communicate()
+        if proc.returncode == 0 and b'BEGIN CERTIFICATE' in cert_pem:
+            return cert_pem
+        tail = err.decode('utf-8', 'ignore').strip().splitlines()
+        last_error = tail[-1] if tail else 'no output'
+    print('Warning: OpenSSL could not read the p12 (last error: {})'.format(last_error))
+    return None
+
+
+def _security_export_cert_pem(p12_path, p12_password=''):
+    """Fallback: let macOS `security` import the p12 and export the certificate.
+
+    `security` parses legacy-encrypted p12 files natively, so this works even
+    when the available OpenSSL build refuses them.
+    """
+    if sys.platform != 'darwin':
+        return None
+    keychain_name = 'p12-identity-probe.keychain'
+    try:
+        run_executable_with_output('security', arguments=['delete-keychain', keychain_name], check_result=False)
+        run_executable_with_output('security', arguments=['create-keychain', '-p', 'probe123', keychain_name], check_result=True)
+        run_executable_with_output('security', arguments=['import', p12_path, '-k', keychain_name, '-P', p12_password], check_result=True)
+        pem = run_executable_with_output('security', arguments=['find-certificate', '-p', '-k', keychain_name], check_result=True)
+        if pem and 'BEGIN CERTIFICATE' in pem:
+            return pem.encode('utf-8')
+        return None
+    except Exception as e:
+        print('Warning: `security` fallback failed: {}'.format(e))
+        return None
+    finally:
+        run_executable_with_output('security', arguments=['delete-keychain', keychain_name], check_result=False)
+
+
+def _cert_pem_for_p12(p12_path, p12_password=''):
+    pem = _openssl_extract_cert_pem(p12_path, p12_password)
+    if pem is None:
+        pem = _security_export_cert_pem(p12_path, p12_password)
+    return pem
+
+
+def _common_name_from_pem(cert_pem):
     proc2 = subprocess.Popen(
         [OPENSSL, 'x509', '-noout', '-subject', '-nameopt', 'oneline,-esc_msb'],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -75,21 +122,28 @@ def get_signing_identity_from_p12(p12_path, p12_password=''):
     subject = subject.decode('utf-8').strip()
 
     # Parse CN from subject line like: subject= C = AE, O = ..., CN = Some Name
-    if 'CN = ' in subject:
-        cn = subject.split('CN = ')[-1].split(',')[0].strip()
-        return cn
-
+    for marker in ('CN = ', 'CN='):
+        if marker in subject:
+            cn = subject.split(marker)[-1].split(',')[0].strip()
+            if cn:
+                return cn
     return None
+
+
+def get_signing_identity_from_p12(p12_path, p12_password=''):
+    """Extract the common name (signing identity) from the p12 certificate."""
+    cert_pem = _cert_pem_for_p12(p12_path, p12_password)
+    if cert_pem is None:
+        return None
+    return _common_name_from_pem(cert_pem)
 
 
 def get_certificate_base64_from_p12(p12_path, p12_password=''):
     """Extract the certificate as base64 from p12 file."""
-    # Extract certificate in PEM format
-    proc = subprocess.Popen(
-        [OPENSSL, 'pkcs12', '-in', p12_path, '-passin', 'pass:' + p12_password, '-nokeys', '-legacy'],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    cert_pem, _ = proc.communicate()
+    cert_pem = _cert_pem_for_p12(p12_path, p12_password)
+    if cert_pem is None:
+        print('Warning: could not extract certificate from p12')
+        return ''
 
     # Convert to DER format
     proc2 = subprocess.Popen(
