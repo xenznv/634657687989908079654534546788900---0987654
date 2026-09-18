@@ -996,8 +996,6 @@ public enum JerkgramActivityGhostRuntime {
             return settings.choosingLocation
         case .choosingContact:
             return settings.choosingContact
-        default:
-            return false
         }
     }
 }
