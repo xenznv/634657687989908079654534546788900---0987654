@@ -1217,8 +1217,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
                 systemStyle: .glass,
                 title: title,
                 text: hint,
-                maximumNumberOfLines: 3,
                 value: value,
+                maximumNumberOfLines: 3,
                 sectionId: self.section,
                 style: .blocks,
                 updated: { updatedValue in
