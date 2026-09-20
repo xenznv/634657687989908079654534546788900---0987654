@@ -9157,6 +9157,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     }
 
     func sendMessages(_ messages: [EnqueueMessage], media: Bool = false, postpone: Bool = false, commit: Bool = false) {
+        JerkgramDebugConsole.breadcrumb("sendMessages start count=\(messages.count) media=\(media)")
         if case let .customChatContents(customChatContents) = self.subject {
             customChatContents.enqueueMessages(messages: messages)
             return

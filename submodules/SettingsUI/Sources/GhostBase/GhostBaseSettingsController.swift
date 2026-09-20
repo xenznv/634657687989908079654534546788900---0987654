@@ -840,6 +840,7 @@ enum GhostBaseSettingsPage: Equatable {
     case appearance
     case debugResearch
     case about
+    case debugConsole
 
     var title: String {
         switch self {
@@ -867,6 +868,8 @@ enum GhostBaseSettingsPage: Equatable {
             return "Debug / Research"
         case .about:
             return "About"
+        case .debugConsole:
+            return "Debug Console"
         }
     }
 
@@ -897,6 +900,8 @@ enum GhostBaseSettingsPage: Equatable {
             return strings.debugResearch
         case .about:
             return strings.about
+        case .debugConsole:
+            return strings.debugConsole
         }
     }
 }
@@ -1968,7 +1973,8 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(2, 1, strings.messages, strings.messagesHint, "", .messages),
             .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
             .disclosureDetail(2, 3, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
-            .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home)
+            .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home),
+            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
         ]
     }
 
@@ -2122,6 +2128,16 @@ private func ghostBaseSettingsEntries(
             .toggle(0, 2, GhostBaseKey.oneTimeScreenRecording, strings.oneTimeScreenRecording, state.oneTimeScreenRecording),
             .toggle(0, 3, GhostBaseKey.oneTimeSave, strings.oneTimeMedia, state.oneTimeSave),
             .toggle(0, 4, GhostBaseKey.storySave, strings.storySave, state.storySave)
+        ]
+    }
+
+    if page == .debugConsole {
+        let logText = JerkgramDebugConsole.logText()
+        // Cap the rendered text: a full log can be large, keep the most recent tail.
+        let displayText = logText.count > 4000 ? "…" + String(logText.suffix(4000)) : logText
+        return [
+            .researchAction(0, 1, strings.debugConsoleClear, "debug.clearLog"),
+            .researchInfo(1, 1, displayText.isEmpty ? strings.debugConsoleEmpty : displayText)
         ]
     }
 
@@ -3192,6 +3208,10 @@ func ghostBaseSettingsPageController(
             switch action {
             case "copyExtensionDiagnostics":
                 UIPasteboard.general.string = BuildConfig.jerkgramExtensionDiagnosticsReport()
+
+            case "debug.clearLog":
+                JerkgramDebugConsole.clearLog()
+                refreshResearchPage()
 
             case "hiddenGiftsSelf":
                 runHiddenGiftsProbe(

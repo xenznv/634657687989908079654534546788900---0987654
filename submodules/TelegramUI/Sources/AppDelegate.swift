@@ -1,6 +1,7 @@
 import UIKit
 import SwiftSignalKit
 import Display
+import JerkgramCore
 import TelegramCore
 import UserNotifications
 import Intents
@@ -637,6 +638,10 @@ BuildConfig.jerkgramRecordExtensionDiagnostic(
     private var recaptchaClientsBySiteKey: [String: Promise<RecaptchaClient>] = [:]
         
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Install the debug console crash handlers as early as possible so
+        // even crashes during startup are captured for the in-app console.
+        JerkgramDebugConsole.shared.installCrashHandlers()
+        JerkgramDebugConsole.shared.log("app launch")
         JerkGramLegacyDefaultsMigration.run()
         precondition(!testIsLaunched)
         testIsLaunched = true

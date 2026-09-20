@@ -26,6 +26,11 @@ public enum JerkgramStringKey: String, CaseIterable {
     case debugResearch
     case about
 
+    case debugConsole
+    case debugConsoleHint
+    case debugConsoleClear
+    case debugConsoleEmpty
+
     case basicFunctionsHint
     case infoDisplayHint
     case ghostModeHint
@@ -525,6 +530,10 @@ public struct JerkgramStrings {
         .bypassAllHint: "One switch for everything: saving, copying and forwarding protected content, screenshots, screen recording, and saving or capturing view-once media.",
         .removeAds: "Remove Ads",
         .removeAdsHint: "Hide all sponsored posts in channels and all ads across Telegram without a Premium subscription.",
+        .debugConsole: "Debug Console",
+        .debugConsoleHint: "App event log for diagnosing crashes and errors",
+        .debugConsoleClear: "Clear Log",
+        .debugConsoleEmpty: "No events recorded yet. When the app crashes or hits an error, the details will appear here.",
         .showHiddenChats: "Open chats hidden by Telegram rules",
         .showHiddenChatsHint: "Channels, groups and individual messages can be flagged as restricted by Telegram's rules, App Store requirements or local law. The server still sends the content in full — it is the app that hides it, so the flag can be ignored. Does not apply to child abuse material, and does not help with channels Telegram has deleted or banned: there the server sends nothing at all.",
         .ghostMode: "Ghost Mode",
@@ -724,6 +733,10 @@ public struct JerkgramStrings {
         .bypassAllHint: "Один переключатель для всего: сохранение, копирование и пересылка защищённого контента, скриншоты, запись экрана, а также сохранение и захват медиа с одиночным просмотром.",
         .removeAds: "Убирать рекламу",
         .removeAdsHint: "Скрывает все спонсорские посты в каналах и всю рекламу в Telegram без подписки Premium.",
+        .debugConsole: "Дебаг-консоль",
+        .debugConsoleHint: "Журнал событий приложения для диагностики сбоев",
+        .debugConsoleClear: "Очистить журнал",
+        .debugConsoleEmpty: "Событий пока нет. Когда приложение упадёт или возникнет ошибка, подробности появятся здесь.",
         .showHiddenChats: "Открывать чаты, скрытые по правилам Telegram",
         .showHiddenChatsHint: "Каналы, группы и отдельные сообщения могут быть помечены как ограниченные правилами Telegram, требованиями App Store или местным законодательством. Сервер присылает контент полностью — скрывает его само приложение, поэтому флаг можно игнорировать. Не относится к материалам с несовершеннолетними и не помогает с удалёнными или забаненными каналами: там сервер не присылает ничего.",
         .ghostMode: "Режим призрака",

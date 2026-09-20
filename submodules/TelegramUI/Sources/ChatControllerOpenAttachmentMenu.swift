@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import Display
 import SwiftSignalKit
+import JerkgramCore
 import TelegramCore
 import TelegramPresentationData
 import TelegramUIPreferences
@@ -57,6 +58,7 @@ extension ChatControllerImpl {
             guard self.audioRecorderValue == nil && self.videoRecorderValue == nil else {
                 return
             }
+            JerkgramDebugConsole.breadcrumb("attachment.menu.open subject=\(subject)")
             
             struct RichTextDraft: Codable {
                 enum LoadError: Error {
@@ -474,6 +476,7 @@ extension ChatControllerImpl {
                         })
                         return true
                     case .file:
+                        JerkgramDebugConsole.breadcrumb("attachment.file.tab")
                         strongSelf.controllerNavigationDisposable.set(nil)
                         let existingController = currentFilesController.with { $0 }
                         if let controller = existingController {
@@ -493,6 +496,7 @@ extension ChatControllerImpl {
                             guard let self else {
                                 return
                             }
+                            JerkgramDebugConsole.breadcrumb("send.file start refs=\(mediaReferences.count)")
                             var messages: [EnqueueMessage] = []
                             var groupingKey: Int64?
                             if mediaReferences.count > 1 {
@@ -518,6 +522,7 @@ extension ChatControllerImpl {
                                 messages.append(.message(text: isLast ? text : "", attributes: isLast ? attributes : [], inlineStickers: [:], mediaReference: mediaReference, threadId: strongSelf.chatLocation.threadId, replyToMessageId: nil, replyToStoryId: nil, localGroupingKey: groupingKey, correlationId: nil, bubbleUpEmojiOrStickersets: []))
                             }
                             messages = self.transformEnqueueMessages(messages, silentPosting: silentPosting, scheduleTime: scheduleTime, repeatPeriod: nil, postpone: false)
+                            JerkgramDebugConsole.breadcrumb("send.file transform done count=\(messages.count)")
                             self.presentPaidMessageAlertIfNeeded(completion: { [weak self] postpone in
                                 self?.sendMessages(messages, media: true, postpone: postpone)
                             })
@@ -1424,6 +1429,7 @@ extension ChatControllerImpl {
     }
 
     func presentFileGallery(editingMessage: Bool = false) {
+        JerkgramDebugConsole.breadcrumb("attachment.presentFileGallery")
         self.presentOldMediaPicker(fileMode: true, editingMedia: editingMessage, completion: { [weak self] signals, silentPosting, scheduleTime in
             if editingMessage {
                 self?.editMessageMediaWithLegacySignals(signals)
@@ -1434,6 +1440,7 @@ extension ChatControllerImpl {
     }
 
     func presentICloudFileGallery(editingMessage: Bool = false, documentTypes: [String] = ["public.item"]) {
+        JerkgramDebugConsole.breadcrumb("attachment.presentICloudFileGallery types=\(documentTypes.count)")
         let _ = (self.context.engine.data.get(
             TelegramEngine.EngineData.Item.Peer.Peer(id: self.context.account.peerId),
             TelegramEngine.EngineData.Item.Configuration.UserLimits(isPremium: false),
@@ -1707,6 +1714,7 @@ extension ChatControllerImpl {
     }
 
     func presentOldMediaPicker(fileMode: Bool, editingMedia: Bool, completion: @escaping ([Any], Bool, Int32) -> Void) {
+        JerkgramDebugConsole.breadcrumb("attachment.presentOldMediaPicker fileMode=\(fileMode)")
         let engine = self.context.engine
         let _ = (self.context.sharedContext.accountManager.transaction { transaction -> Signal<(GeneratedMediaStoreSettings, EngineConfiguration.SearchBots), NoError> in
             let entry = transaction.getSharedData(ApplicationSpecificSharedDataKeys.generatedMediaStoreSettings)?.get(GeneratedMediaStoreSettings.self)
