@@ -15,9 +15,13 @@ fileprivate var jerkgramBacktraceBuffer: UnsafeMutablePointer<UnsafeMutableRawPo
 private func jerkgramSignalHandler(_ sig: Int32) {
     let fd = jerkgramCrashFileDescriptor
     if fd >= 0 {
-        var header = [CChar](repeating: 0, count: 64)
-        snprintf(&header, 64, "\n===JERKGRAM-SIGNAL-%d===\n", sig)
-        _ = write(fd, header, strlen(header))
+        let headerText = "\n===JERKGRAM-SIGNAL-\(sig)===\n"
+        let headerData = headerText.data(using: .utf8) ?? Data()
+        headerData.withUnsafeBytes { (raw: UnsafeRawBufferPointer) in
+            if let base = raw.baseAddress {
+                _ = write(fd, base, raw.count)
+            }
+        }
         if let buffer = jerkgramBacktraceBuffer {
             let count = backtrace(buffer, 128)
             if count > 0 {
