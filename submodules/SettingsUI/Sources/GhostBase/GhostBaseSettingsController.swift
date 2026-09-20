@@ -2136,6 +2136,7 @@ private func ghostBaseSettingsEntries(
         // Cap the rendered text: a full log can be large, keep the most recent tail.
         let displayText = logText.count > 4000 ? "…" + String(logText.suffix(4000)) : logText
         return [
+            .researchAction(0, 0, strings.debugConsoleCopy, "debug.copyLog"),
             .researchAction(0, 1, strings.debugConsoleClear, "debug.clearLog"),
             .researchInfo(1, 1, displayText.isEmpty ? strings.debugConsoleEmpty : displayText)
         ]
@@ -3208,6 +3209,9 @@ func ghostBaseSettingsPageController(
             switch action {
             case "copyExtensionDiagnostics":
                 UIPasteboard.general.string = BuildConfig.jerkgramExtensionDiagnosticsReport()
+
+            case "debug.copyLog":
+                UIPasteboard.general.string = JerkgramDebugConsole.logText()
 
             case "debug.clearLog":
                 JerkgramDebugConsole.clearLog()

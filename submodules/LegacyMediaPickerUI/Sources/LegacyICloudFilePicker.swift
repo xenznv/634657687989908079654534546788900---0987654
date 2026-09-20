@@ -1,8 +1,10 @@
 import Foundation
 import UIKit
+import UniformTypeIdentifiers
 import Display
 import TelegramPresentationData
 import LegacyUI
+import JerkgramCore
 
 private class DocumentPickerViewController: UIDocumentPickerViewController {
     var forceDarkTheme = false
@@ -82,8 +84,17 @@ public func legacyICloudFilePicker(theme: PresentationTheme, mode: LegacyICloudF
             controller = DocumentPickerViewController(url: url, in: mode.documentPickerMode)
         }
     } else {
-        controller = DocumentPickerViewController(documentTypes: documentTypes, in: mode.documentPickerMode)
+        // Use the modern iOS 14+ API: the legacy `initWithDocumentTypes:inMode:`
+        // selector is hooked by sideloading layers (LiveContainer), whose swizzle
+        // crashes on the Swift array force-bridge (SIGABRT in swift_dynamicCast).
+        if #available(iOS 14.0, *) {
+            let contentTypes = documentTypes.compactMap { UTType(identifier: $0) }
+            controller = DocumentPickerViewController(forOpeningContentTypes: contentTypes.isEmpty ? [.item] : contentTypes, asCopy: mode.documentPickerMode == .import)
+        } else {
+            controller = DocumentPickerViewController(documentTypes: documentTypes, in: mode.documentPickerMode)
+        }
     }
+    JerkgramDebugConsole.breadcrumb("icloud.picker.created mode=\(mode.documentPickerMode.rawValue) types=\(documentTypes.count)")
     controller.forceDarkTheme = forceDarkTheme || theme.overallDarkAppearance
     controller.didDisappear = {
         dismissImpl?()

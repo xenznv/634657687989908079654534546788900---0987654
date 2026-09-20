@@ -22,6 +22,7 @@ swift_library(
         "//submodules/LegacyUI:LegacyUI",
         "//submodules/ContextUI:ContextUI",
         "//submodules/MimeTypes:MimeTypes",
+        "//submodules/JerkgramCore:JerkgramCore",
         "//submodules/LocalMediaResources:LocalMediaResources",
         "//submodules/SearchPeerMembers:SearchPeerMembers",
         "//submodules/SaveToCameraRoll:SaveToCameraRoll",

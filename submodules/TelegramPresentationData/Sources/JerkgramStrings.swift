@@ -28,6 +28,7 @@ public enum JerkgramStringKey: String, CaseIterable {
 
     case debugConsole
     case debugConsoleHint
+    case debugConsoleCopy
     case debugConsoleClear
     case debugConsoleEmpty
 
@@ -260,6 +261,7 @@ public struct JerkgramStrings {
 
     public var debugConsole: String { self.text(.debugConsole) }
     public var debugConsoleHint: String { self.text(.debugConsoleHint) }
+    public var debugConsoleCopy: String { self.text(.debugConsoleCopy) }
     public var debugConsoleClear: String { self.text(.debugConsoleClear) }
     public var debugConsoleEmpty: String { self.text(.debugConsoleEmpty) }
 
@@ -537,6 +539,7 @@ public struct JerkgramStrings {
         .removeAdsHint: "Hide all sponsored posts in channels and all ads across Telegram without a Premium subscription.",
         .debugConsole: "Debug Console",
         .debugConsoleHint: "App event log for diagnosing crashes and errors",
+        .debugConsoleCopy: "Copy Log",
         .debugConsoleClear: "Clear Log",
         .debugConsoleEmpty: "No events recorded yet. When the app crashes or hits an error, the details will appear here.",
         .showHiddenChats: "Open chats hidden by Telegram rules",
@@ -740,6 +743,7 @@ public struct JerkgramStrings {
         .removeAdsHint: "Скрывает все спонсорские посты в каналах и всю рекламу в Telegram без подписки Premium.",
         .debugConsole: "Дебаг-консоль",
         .debugConsoleHint: "Журнал событий приложения для диагностики сбоев",
+        .debugConsoleCopy: "Скопировать журнал",
         .debugConsoleClear: "Очистить журнал",
         .debugConsoleEmpty: "Событий пока нет. Когда приложение упадёт или возникнет ошибка, подробности появятся здесь.",
         .showHiddenChats: "Открывать чаты, скрытые по правилам Telegram",
