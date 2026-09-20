@@ -258,6 +258,11 @@ public struct JerkgramStrings {
     public var debugResearch: String { self.text(.debugResearch) }
     public var about: String { self.text(.about) }
 
+    public var debugConsole: String { self.text(.debugConsole) }
+    public var debugConsoleHint: String { self.text(.debugConsoleHint) }
+    public var debugConsoleClear: String { self.text(.debugConsoleClear) }
+    public var debugConsoleEmpty: String { self.text(.debugConsoleEmpty) }
+
     public var basicFunctionsHint: String { self.text(.basicFunctionsHint) }
     public var ghostModeHint: String { self.text(.ghostModeHint) }
     public var messagesHint: String { self.text(.messagesHint) }
