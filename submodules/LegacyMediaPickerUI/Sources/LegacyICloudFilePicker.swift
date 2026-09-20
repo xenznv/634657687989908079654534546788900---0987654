@@ -88,7 +88,7 @@ public func legacyICloudFilePicker(theme: PresentationTheme, mode: LegacyICloudF
         // selector is hooked by sideloading layers (LiveContainer), whose swizzle
         // crashes on the Swift array force-bridge (SIGABRT in swift_dynamicCast).
         if #available(iOS 14.0, *) {
-            let contentTypes = documentTypes.compactMap { UTType(identifier: $0) }
+            let contentTypes = documentTypes.compactMap { UTType($0) }
             controller = DocumentPickerViewController(forOpeningContentTypes: contentTypes.isEmpty ? [.item] : contentTypes, asCopy: mode.documentPickerMode == .import)
         } else {
             controller = DocumentPickerViewController(documentTypes: documentTypes, in: mode.documentPickerMode)
