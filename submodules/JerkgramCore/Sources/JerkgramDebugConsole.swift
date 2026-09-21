@@ -47,6 +47,10 @@ public final class JerkgramDebugConsole {
     }()
 
     private let lock = NSLock()
+    // Counts the entries written by this process only. The background refresh
+    // task uses it to tell whether a wake-up recorded anything at all: the
+    // persisted log is capped, so its size stops changing once it is full.
+    private var appendedCountInProcess = 0
 
     private init() {}
 
@@ -83,6 +87,12 @@ public final class JerkgramDebugConsole {
         return self.entries().joined(separator: "\n")
     }
 
+    public func appendedCount() -> Int {
+        self.lock.lock()
+        defer { self.lock.unlock() }
+        return self.appendedCountInProcess
+    }
+
     public func clear() {
         self.lock.lock()
         UserDefaults.standard.removeObject(forKey: Self.entriesKey)
@@ -107,6 +117,7 @@ public final class JerkgramDebugConsole {
             all.removeFirst(all.count - Self.maxEntries)
         }
         UserDefaults.standard.set(all, forKey: Self.entriesKey)
+        self.appendedCountInProcess += 1
     }
 
     // MARK: - Static shortcuts (breadcrumbs and UI call sites)
@@ -129,6 +140,10 @@ public final class JerkgramDebugConsole {
 
     public static func logText() -> String {
         return shared.entriesText()
+    }
+
+    public static func appendedEntryCount() -> Int {
+        return shared.appendedCount()
     }
 
     public static func clearLog() {

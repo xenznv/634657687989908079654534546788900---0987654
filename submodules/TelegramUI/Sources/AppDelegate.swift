@@ -1923,6 +1923,18 @@ BuildConfig.jerkgramRecordExtensionDiagnostic(
             })
         }
         
+        if #available(iOS 13.0, *) {
+            // Jerkgram: a background refresh that lets the app pull the server
+            // difference on its own. A message that was deleted while the app
+            // was closed is only ever visible in that replayed difference, so
+            // the shorter the gap between wake-ups, the more of it survives.
+            let jerkgramRefreshTaskId = "\(Bundle.main.bundleIdentifier ?? "").refresh"
+            BGTaskScheduler.shared.register(forTaskWithIdentifier: jerkgramRefreshTaskId, using: DispatchQueue.main) { task in
+                self.handleJerkgramBackgroundRefresh(task: task)
+            }
+            self.scheduleJerkgramBackgroundRefresh()
+        }
+        
         let timestamp = Int(CFAbsoluteTimeGetCurrent())
         let minReindexTimestamp = timestamp - 2 * 24 * 60 * 60
         if let indexTimestamp = UserDefaults.standard.object(forKey: "TelegramCacheIndexTimestamp_v2") as? NSNumber, indexTimestamp.intValue >= minReindexTimestamp {
@@ -2265,7 +2277,54 @@ BuildConfig.jerkgramRecordExtensionDiagnostic(
         })
     }
 
+    @available(iOS 13.0, *)
+    private func scheduleJerkgramBackgroundRefresh() {
+        let identifier = "\(Bundle.main.bundleIdentifier ?? "").refresh"
+        BGTaskScheduler.shared.getPendingTaskRequests(completionHandler: { tasks in
+            if tasks.contains(where: { $0.identifier == identifier }) {
+                return
+            }
+            let request = BGAppRefreshTaskRequest(identifier: identifier)
+            request.requiresNetworkConnectivity = true
+            request.earliestBeginDate = Date(timeIntervalSinceNow: 3 * 60 * 60)
+            do {
+                try BGTaskScheduler.shared.submit(request)
+            } catch let error {
+                Logger.shared.log("App \(self.episodeId)", "Error submitting jerkgram refresh request: \(error)")
+            }
+        })
+    }
+
+    @available(iOS 13.0, *)
+    private func handleJerkgramBackgroundRefresh(task: BGTask) {
+        // Arm the next wake-up right away: this one is already running.
+        self.scheduleJerkgramBackgroundRefresh()
+
+        let entriesBefore = JerkgramDebugConsole.appendedEntryCount()
+        JerkgramDebugConsole.breadcrumb("bg.refresh.begin")
+
+        let completion = JerkgramBackgroundRefreshCompletion(handler: { success in
+            let recorded = JerkgramDebugConsole.appendedEntryCount() - entriesBefore
+            JerkgramDebugConsole.breadcrumb("bg.refresh.end recorded=\(recorded)")
+            task.setTaskCompleted(success: success)
+        })
+        task.expirationHandler = {
+            completion.finish(success: false)
+        }
+        // The account state — and with it the replayed difference that feeds the
+        // capture hooks — is fetched by the normal launch sequence, so all this
+        // window has to do is stay alive until that fetch lands. No media is
+        // downloaded and no UI is built while it runs.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 25.0) {
+            completion.finish(success: true)
+        }
+    }
+
     func applicationDidEnterBackground(_ application: UIApplication) {
+        if #available(iOS 13.0, *) {
+            // Re-arm on every trip to the background so the fence stays in place.
+            self.scheduleJerkgramBackgroundRefresh()
+        }
         let _ = (self.sharedContextPromise.get()
         |> take(1)
         |> deliverOnMainQueue).start(next: { sharedApplicationContext in
@@ -3706,5 +3765,28 @@ final class UpdateSettings: Codable, Equatable {
     
     static func ==(lhs: UpdateSettings, rhs: UpdateSettings) -> Bool {
         return lhs.url == rhs.url
+    }
+}
+
+// Jerkgram: completes a background refresh exactly once, whether the system
+// expiry fired first or the bounded work window elapsed normally.
+private final class JerkgramBackgroundRefreshCompletion {
+    private let lock = NSLock()
+    private var finished = false
+    private let handler: (Bool) -> Void
+
+    init(handler: @escaping (Bool) -> Void) {
+        self.handler = handler
+    }
+
+    func finish(success: Bool) {
+        self.lock.lock()
+        if self.finished {
+            self.lock.unlock()
+            return
+        }
+        self.finished = true
+        self.lock.unlock()
+        self.handler(success)
     }
 }

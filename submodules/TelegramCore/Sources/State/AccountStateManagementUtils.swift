@@ -2923,6 +2923,59 @@ func extractEmojiFileIds(message: StoreMessage, fileIds: inout Set<Int64>) {
     }
 }
 
+// Jerkgram: remember the text of every freshly received message so that a
+// deletion arriving later — including one replayed from the server after the
+// app stayed closed, when nothing else has a copy of the message — can still be
+// recorded together with its content. Messages are remembered only for chats
+// where the fork already captures deletions or edits.
+private func jerkgramRecordGuardNotes(
+    accountPeerId: PeerId,
+    messages: [StoreMessage]
+) {
+    if messages.isEmpty {
+        return
+    }
+    var notes: [JerkgramIncomingMessageNote] = []
+    for message in messages {
+        let text = message.text
+        if text.isEmpty {
+            continue
+        }
+        let chatPeerId = message.id.peerId
+        let isSecretChat = chatPeerId.namespace == Namespaces.Peer.SecretChat
+        let capturesDeletions = JerkgramRetentionRuntime.shouldCapture(
+            accountPeerId: accountPeerId.toInt64(),
+            chatPeerId: chatPeerId.toInt64(),
+            isSecretChat: isSecretChat,
+            legacyToggleKey: "jerkgram.Messages.SaveDeleted"
+        )
+        if !capturesDeletions {
+            let capturesEdits = JerkgramRetentionRuntime.shouldCapture(
+                accountPeerId: accountPeerId.toInt64(),
+                chatPeerId: chatPeerId.toInt64(),
+                isSecretChat: isSecretChat,
+                legacyToggleKey: "jerkgram.Messages.SaveEditHistory"
+            )
+            if !capturesEdits {
+                continue
+            }
+        }
+        notes.append(JerkgramIncomingMessageNote(
+            chatPeerId: chatPeerId.toInt64(),
+            messageNamespace: message.id.namespace,
+            messageId: message.id.id,
+            globallyUniqueId: message.globallyUniqueId,
+            senderPeerId: message.authorId?.toInt64(),
+            timestampMs: Int64(message.timestamp) * 1000,
+            text: text
+        ))
+    }
+    JerkgramMessageGuard.note(
+        accountPeerId: accountPeerId.toInt64(),
+        notes: notes
+    )
+}
+
 private func messagesFromOperations(state: AccountMutableState) -> [StoreMessage] {
     var messages: [StoreMessage] = []
     for operation in state.operations {
@@ -4362,6 +4415,7 @@ func replayFinalState(
                 }
             
                 let _ = transaction.addMessages(messages, location: location)
+                jerkgramRecordGuardNotes(accountPeerId: accountPeerId, messages: messages)
                 if case .UpperHistoryBlock = location {
                     for message in messages {
                         let chatPeerId = message.id.peerId
@@ -4545,17 +4599,30 @@ func replayFinalState(
                 }
             case let .DeleteMessagesWithGlobalIds(ids):
                 let ghostBaseMessageIds = transaction.messageIdsForGlobalIds(ids)
-                let ghostBaseSaveDeleted = ghostBaseMessageIds.allSatisfy { id in
-                    JerkgramRetentionRuntime.shouldCapture(
+                // Jerkgram: gate every id on its own. A replayed batch mixes
+                // chats, and one chat without capture must not discard the
+                // deletions of all the others.
+                var ghostBaseCapturedIds: [MessageId] = []
+                var ghostBaseCapturedGlobalIds = Set<Int64>()
+                for id in ghostBaseMessageIds {
+                    guard JerkgramRetentionRuntime.shouldCapture(
                         accountPeerId: accountPeerId.toInt64(),
                         chatPeerId: id.peerId.toInt64(),
                         isSecretChat: id.peerId.namespace == Namespaces.Peer.SecretChat,
                         legacyToggleKey: "jerkgram.Messages.SaveDeleted"
-                    )
+                    ) else {
+                        continue
+                    }
+                    guard let globallyUniqueId = transaction.getMessage(id)?.globallyUniqueId else {
+                        continue
+                    }
+                    ghostBaseCapturedIds.append(id)
+                    ghostBaseCapturedGlobalIds.insert(globallyUniqueId)
                 }
+                let ghostBasePlainIds = ids.filter { !ghostBaseCapturedGlobalIds.contains($0) }
 
-                if ghostBaseSaveDeleted {
-                    for id in ghostBaseMessageIds {
+                if !ghostBaseCapturedIds.isEmpty {
+                    for id in ghostBaseCapturedIds {
                         transaction.updateMessage(id, update: { currentMessage in
                             ghostBaseScheduleDeletedMediaPreservation(
                                 mediaBox: mediaBox,
@@ -4634,12 +4701,13 @@ func replayFinalState(
                         })
                     }
                     GhostBaseRuntimeDiagnosticsV11G.record(
-                        "global-delete preserved=\(ghostBaseMessageIds.count)"
+                        "global-delete preserved=\(ghostBaseCapturedIds.count)"
                     )
-                } else {
+                }
+                if !ghostBasePlainIds.isEmpty {
                     var resourceIds: [MediaResourceId] = []
                     transaction.deleteMessagesWithGlobalIds(
-                        ids,
+                        ghostBasePlainIds,
                         forEachMedia: { media in
                             addMessageMediaResourceIdsToRemove(
                                 media: media,
@@ -4654,12 +4722,14 @@ func replayFinalState(
                         ).start()
                     }
                     GhostBaseRuntimeDiagnosticsV11G.record(
-                        "global-delete removed=\(ids.count)"
+                        "global-delete removed=\(ghostBasePlainIds.count)"
                     )
                 }
                 deletedMessageIds.append(contentsOf: ids.map { .global($0) })
             case let .DeleteMessages(ids):
-                let ghostBaseSaveDeleted = ids.allSatisfy { id in
+                // Jerkgram: gate every id on its own, for the same reason as the
+                // global-id branch above.
+                let ghostBaseCapturedIds = ids.filter { id in
                     JerkgramRetentionRuntime.shouldCapture(
                         accountPeerId: accountPeerId.toInt64(),
                         chatPeerId: id.peerId.toInt64(),
@@ -4667,10 +4737,41 @@ func replayFinalState(
                         legacyToggleKey: "jerkgram.Messages.SaveDeleted"
                     )
                 }
+                let ghostBaseCapturedSet = Set(ghostBaseCapturedIds)
+                let ghostBasePlainIds = ids.filter { !ghostBaseCapturedSet.contains($0) }
 
-                if ghostBaseSaveDeleted {
-                    for id in ids {
+                if !ghostBaseCapturedIds.isEmpty {
+                    for id in ghostBaseCapturedIds {
                         guard let currentMessage = transaction.getMessage(id) else {
+                            // The store has no such message: it was deleted while
+                            // the app was closed, so only the guard still knows
+                            // what it used to say.
+                            if let ghostBaseGuardText = JerkgramMessageGuard.text(
+                                accountPeerId: accountPeerId.toInt64(),
+                                chatPeerId: id.peerId.toInt64(),
+                                messageNamespace: id.namespace,
+                                messageId: id.id
+                            ) {
+                                JerkgramCaptureRecorder.record(
+                                    accountPeerId: accountPeerId.toInt64(),
+                                    chatPeerId: id.peerId.toInt64(),
+                                    kind: .deletedMessage,
+                                    senderPeerId: nil,
+                                    messageNamespace: id.namespace,
+                                    messageId: id.id,
+                                    observedAtMs: Int64(Date().timeIntervalSince1970 * 1000.0),
+                                    payload: JerkgramEventPayload(
+                                        text: ghostBaseGuardText,
+                                        metadata: ["source": "guard"]
+                                    )
+                                )
+                                GhostBaseRuntimeDiagnosticsV11G.record(
+                                    "local-delete from-guard"
+                                )
+                                // Rare and worth surfacing: the journal gained a
+                                // deletion whose content only the guard still had.
+                                JerkgramDebugConsole.breadcrumb("delete.from-guard")
+                            }
                             continue
                         }
                         ghostBaseScheduleDeletedMediaPreservation(
@@ -4750,13 +4851,14 @@ func replayFinalState(
                         })
                     }
                     GhostBaseRuntimeDiagnosticsV11G.record(
-                        "local-delete preserved=\(ids.count)"
+                        "local-delete preserved=\(ghostBaseCapturedIds.count)"
                     )
-                } else {
+                }
+                if !ghostBasePlainIds.isEmpty {
                     _internal_deleteMessages(
                         transaction: transaction,
                         mediaBox: mediaBox,
-                        ids: ids,
+                        ids: ghostBasePlainIds,
                         manualAddMessageThreadStatsDifference: {
                             id, add, remove in
                             addMessageThreadStatsDifference(
@@ -4769,7 +4871,7 @@ func replayFinalState(
                         }
                     )
                     GhostBaseRuntimeDiagnosticsV11G.record(
-                        "local-delete removed=\(ids.count)"
+                        "local-delete removed=\(ghostBasePlainIds.count)"
                     )
                 }
                 deletedMessageIds.append(
