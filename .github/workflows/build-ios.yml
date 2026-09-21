@@ -72,8 +72,24 @@ jobs:
             arm64|aarch64) BARCH=arm64 ;;
             *) BARCH=x86_64 ;;
           esac
-          curl -fsSL -o /usr/local/bin/bazel \
-            "https://github.com/bazelbuild/bazel/releases/download/${{ steps.versions.outputs.bazel }}/bazel-${{ steps.versions.outputs.bazel }}-darwin-${BARCH}"
+          URL="https://github.com/bazelbuild/bazel/releases/download/${{ steps.versions.outputs.bazel }}/bazel-${{ steps.versions.outputs.bazel }}-darwin-${BARCH}"
+          # Release assets are served through a CDN that occasionally answers
+          # 502/504. Retry the download instead of failing the whole build on a
+          # transient error, which is what a plain curl does.
+          DOWNLOADED=0
+          for attempt in 1 2 3 4 5; do
+            if curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 --connect-timeout 30 \
+              -o /usr/local/bin/bazel "$URL"; then
+              DOWNLOADED=1
+              break
+            fi
+            echo "bazel download attempt ${attempt} failed"
+            sleep 15
+          done
+          if [ "$DOWNLOADED" -ne 1 ]; then
+            echo "bazel download failed after 5 attempts: $URL"
+            exit 1
+          fi
           chmod +x /usr/local/bin/bazel
           bazel --version
 
