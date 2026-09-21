@@ -2285,7 +2285,8 @@ BuildConfig.jerkgramRecordExtensionDiagnostic(
                 return
             }
             let request = BGAppRefreshTaskRequest(identifier: identifier)
-            request.requiresNetworkConnectivity = true
+            // A refresh request has no network knob: iOS only grants the window
+            // when it is willing to let the app reach the network anyway.
             request.earliestBeginDate = Date(timeIntervalSinceNow: 3 * 60 * 60)
             do {
                 try BGTaskScheduler.shared.submit(request)
