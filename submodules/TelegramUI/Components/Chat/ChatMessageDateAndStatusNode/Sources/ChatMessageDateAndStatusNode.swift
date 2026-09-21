@@ -182,6 +182,11 @@ public class ChatMessageDateAndStatusNode: ASDisplayNode {
         var context: AccountContext
         var presentationData: ChatPresentationData
         var edited: Bool
+        // Fork markers: the local copy of a message can carry a stored edit
+        // history or be a locally kept deletion, neither of which is visible
+        // in the official client.
+        var ghostBaseEditedLabel: String?
+        var ghostBaseDeletedLabel: String?
         var impressionCount: Int?
         var dateText: String
         var type: ChatMessageDateAndStatusType
@@ -228,7 +233,9 @@ public class ChatMessageDateAndStatusNode: ASDisplayNode {
             hasAutoremove: Bool,
             canViewReactionList: Bool,
             animationCache: AnimationCache,
-            animationRenderer: MultiAnimationRenderer
+            animationRenderer: MultiAnimationRenderer,
+            ghostBaseEditedLabel: String? = nil,
+            ghostBaseDeletedLabel: String? = nil
         ) {
             self.context = context
             self.presentationData = presentationData
@@ -254,6 +261,8 @@ public class ChatMessageDateAndStatusNode: ASDisplayNode {
             self.canViewReactionList = canViewReactionList
             self.animationCache = animationCache
             self.animationRenderer = animationRenderer
+            self.ghostBaseEditedLabel = ghostBaseEditedLabel
+            self.ghostBaseDeletedLabel = ghostBaseDeletedLabel
         }
     }
     
@@ -538,10 +547,14 @@ public class ChatMessageDateAndStatusNode: ASDisplayNode {
             }
             
             var updatedDateText = arguments.dateText
+            if let ghostBaseDeletedLabel = arguments.ghostBaseDeletedLabel {
+                updatedDateText = "\(ghostBaseDeletedLabel) \(updatedDateText)"
+            }
             if arguments.edited {
                 if let useEditedTimestamp = arguments.context.getAppConfigValue("message_primary_edited_date") as? Bool, useEditedTimestamp {
                 } else {
-                    updatedDateText = "\(arguments.presentationData.strings.Conversation_MessageEditedLabel) \(updatedDateText)"
+                    let editedLabel = arguments.ghostBaseEditedLabel ?? arguments.presentationData.strings.Conversation_MessageEditedLabel
+                    updatedDateText = "\(editedLabel) \(updatedDateText)"
                 }
             }
             if let impressionCount = arguments.impressionCount {

@@ -98,6 +98,7 @@ import PeerSelectionController
 import SaveToCameraRoll
 import ChatMessageDateAndStatusNode
 import ReplyAccessoryPanelNode
+import ChatSearchNavigationContentNode
 import TextSelectionNode
 import ChatMessagePollBubbleContentNode
 import ChatMessageItem
@@ -267,6 +268,27 @@ extension ChatControllerImpl {
                     
                     let actionSheet = ActionSheetController(presentationData: strongSelf.presentationData)
                     var items: [ActionSheetItem] = []
+
+                    // The local history of this chat lives behind the same menu as
+                    // the destructive actions, so it stays reachable without the
+                    // in-chat search panel.
+                    items.append(ActionSheetButtonItem(title: strongSelf.presentationData.strings.jerkgram.timeMachine, color: .accent, action: { [weak actionSheet, weak self] in
+                        actionSheet?.dismissAnimated()
+
+                        guard let strongSelf = self else {
+                            return
+                        }
+
+                        let controller = jerkgramTimeMachineController(
+                            context: strongSelf.context,
+                            chatPeerId: peerId.toInt64(),
+                            initialQuery: "",
+                            navigateToMessage: { [weak strongSelf] messageId in
+                                strongSelf?.navigateToMessage(from: nil, to: .id(messageId, NavigateToMessageParams(timestamp: nil, quote: nil)), forceInCurrentChat: true)
+                            }
+                        )
+                        strongSelf.push(controller)
+                    }))
                     
                     if case .scheduledMessages = strongSelf.presentationInterfaceState.subject {
                         items.append(ActionSheetButtonItem(title: strongSelf.presentationData.strings.ScheduledMessages_ClearAllConfirmation, color: .destructive, action: { [weak actionSheet] in

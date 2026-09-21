@@ -104,6 +104,70 @@ private func jerkgramMediaLimitTitle(_ value: JerkgramMediaByteLimit, strings: J
     }
 }
 
+/// Total size of the fork's local storage (event journal, media, snapshots).
+/// Cached briefly: the settings list can be rebuilt many times per second and
+/// walking a media directory with gigabytes of files must not run on each pass.
+private enum JerkgramStorageUsage {
+    private static let lock = NSLock()
+    private static var cached: (timestamp: TimeInterval, text: String)?
+
+    static func text() -> String {
+        self.lock.lock()
+        defer { self.lock.unlock() }
+        let now = Date().timeIntervalSince1970
+        if let cached = self.cached, now - cached.timestamp < 20.0 {
+            return cached.text
+        }
+        let text = ByteCountFormatter.string(
+            fromByteCount: self.byteCount(),
+            countStyle: .file
+        )
+        self.cached = (now, text)
+        return text
+    }
+
+    private static func byteCount() -> Int64 {
+        let root = FileManager.default.urls(
+            for: .documentDirectory,
+            in: .userDomainMask
+        )[0].appendingPathComponent(
+            "Jerkgram",
+            isDirectory: true
+        )
+        guard let enumerator = FileManager.default.enumerator(
+            at: root,
+            includingPropertiesForKeys: [
+                .isRegularFileKey,
+                .totalFileAllocatedSizeKey,
+                .fileAllocatedSizeKey
+            ],
+            options: [.skipsHiddenFiles],
+            errorHandler: nil
+        ) else {
+            return 0
+        }
+        let keys: Set<URLResourceKey> = [
+            .isRegularFileKey,
+            .totalFileAllocatedSizeKey,
+            .fileAllocatedSizeKey
+        ]
+        var total: Int64 = 0
+        for case let url as URL in enumerator {
+            guard let values = try? url.resourceValues(
+                forKeys: keys
+            ), values.isRegularFile == true else {
+                continue
+            }
+            total += Int64(
+                values.totalFileAllocatedSize
+                    ?? values.fileAllocatedSize
+                    ?? 0
+            )
+        }
+        return total
+    }
+}
+
 private func jerkgramDataEntries(state: JerkgramDataUIState, strings: JerkgramStrings) -> [JerkgramDataUIEntry] {
     let policy = state.configuration.accountPolicy
     let summary = strings.build124DataSummary(
@@ -113,6 +177,7 @@ private func jerkgramDataEntries(state: JerkgramDataUIState, strings: JerkgramSt
     )
     var entries: [JerkgramDataUIEntry] = [
         .summary(0, 1, strings.dataAndBackup, summary),
+        .summary(0, 2, strings.historyStorageUsed, JerkgramStorageUsage.text()),
         .header(1, strings.retentionRules),
         .action(1, 1, strings.historyDuration, jerkgramDurationTitle(policy.historyDuration, strings: strings), "duration"),
         .action(1, 2, strings.recoveredMediaLimit, jerkgramMediaLimitTitle(policy.mediaByteLimit, strings: strings), "media"),

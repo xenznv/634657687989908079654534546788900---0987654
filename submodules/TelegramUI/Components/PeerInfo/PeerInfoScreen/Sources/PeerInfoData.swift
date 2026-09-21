@@ -415,16 +415,25 @@ private func ghostBaseAppendingProfilePanes(
         return availablePanes
     }
 
-    guard let peer, case .user = peer else {
+    guard let peer else {
         return availablePanes
     }
 
     var result = availablePanes
-    for key in [
-        PeerInfoPaneKey.ghostBaseProfileHistory,
-        PeerInfoPaneKey.ghostBasePresence,
-        PeerInfoPaneKey.ghostBaseGiftHistory
-    ] where !result.contains(key) {
+
+    // Name, @username, photo and description history applies to every peer kind:
+    // channels and groups rename themselves and change avatars exactly like users.
+    var historyPanes: [PeerInfoPaneKey] = [
+        PeerInfoPaneKey.ghostBaseProfileHistory
+    ]
+    // Online / last seen only exists for users; gifts exist wherever the peer
+    // has a gifts profile, which includes channels and groups.
+    if case .user = peer {
+        historyPanes.append(PeerInfoPaneKey.ghostBasePresence)
+    }
+    historyPanes.append(PeerInfoPaneKey.ghostBaseGiftHistory)
+
+    for key in historyPanes where !result.contains(key) {
         result.append(key)
     }
 

@@ -41,6 +41,7 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.protectedContent, strings.protectedContentHint, strings.protectedContentHint, "protected screenshot save copy forward", .protectedContent)
     add(strings.mediaAndStories, strings.mediaAndStoriesHint, strings.mediaAndStoriesHint, "media stories one time", .mediaStories)
     add(strings.dataAndBackup, strings.dataAndBackupHint, strings.dataAndBackupHint, "data backup retention archive", .dataAndBackup)
+    add(strings.historyStorageTitle, strings.historyStorageHint, strings.historyStorageHint, "history storage retention media limit occupied space time machine", .dataAndBackup)
     add(strings.debugConsole, strings.debugConsoleHint, strings.debugConsoleHint, "debug console log crash diagnostics errors events", .debugConsole)
 
     // Basic Functions
@@ -97,6 +98,11 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.forwardFromChat, "Forward protected messages", "Пересылать защищённые сообщения", "chat forward bypass", .protectedContent)
     add(strings.allowScreenshots, "Allow screenshots in protected chats", "Разрешить скриншоты в защищённых чатах", "screenshots allow", .protectedContent)
     add(strings.allowScreenRecording, "Allow screen recording in protected chats", "Разрешить запись экрана в защищённых чатах", "screen recording allow", .protectedContent)
+
+    // History & Storage
+    add(strings.historyDuration, "How long the local history is kept", "Сколько хранится локальная история", "history duration retention keep days forever", .dataAndBackup)
+    add(strings.recoveredMediaLimit, "Size limit for saved media", "Лимит размера сохранённых медиа", "media limit size storage mb gb", .dataAndBackup)
+    add(strings.cleanupExpired, "Delete expired history entries now", "Удалить истёкшие записи истории сейчас", "cleanup clear expired purge history storage", .dataAndBackup)
 
     // Media & Stories
     add(strings.oneTimeScreenshots, "Screenshot view-once media", "Скриншотить медиа с одиночным просмотром", "one time screenshots view once", .mediaStories)

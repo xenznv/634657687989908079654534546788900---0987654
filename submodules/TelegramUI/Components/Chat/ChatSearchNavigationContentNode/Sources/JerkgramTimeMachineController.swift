@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 import Display
 import SwiftSignalKit
 import TelegramCore
@@ -12,6 +13,7 @@ import JerkgramCore
 private struct JerkgramTimeMachineUIState: Equatable {
     var kinds: Set<JerkgramEventKind>
     var senderPeerId: Int64?
+    var showsDiff: Bool
 }
 
 private struct JerkgramTimeMachinePageState: Equatable {
@@ -22,16 +24,19 @@ private struct JerkgramTimeMachinePageState: Equatable {
 private final class JerkgramTimeMachineUIArguments {
     let toggleKind: (JerkgramEventKind) -> Void
     let selectSender: () -> Void
+    let toggleDiff: () -> Void
     let selectEvent: (JerkgramCanonicalEvent) -> Void
     let loadMore: () -> Void
     init(
         toggleKind: @escaping (JerkgramEventKind) -> Void,
         selectSender: @escaping () -> Void,
+        toggleDiff: @escaping () -> Void,
         selectEvent: @escaping (JerkgramCanonicalEvent) -> Void,
         loadMore: @escaping () -> Void
     ) {
         self.toggleKind = toggleKind
         self.selectSender = selectSender
+        self.toggleDiff = toggleDiff
         self.selectEvent = selectEvent
         self.loadMore = loadMore
     }
@@ -41,20 +46,21 @@ private enum JerkgramTimeMachineUIEntry: ItemListNodeEntry {
     case header(Int32, String)
     case summary(Int32, Int32, String, String)
     case filter(Int32, Int32, String, String, JerkgramEventKind?)
-    case result(Int32, Int32, String, String, JerkgramCanonicalEvent)
+    case diffToggle(Int32, Int32, String, String, Bool)
+    case result(Int32, Int32, String, String, String?, JerkgramCanonicalEvent)
     case info(Int32, String)
     case loadMore(Int32, String)
 
     var section: ItemListSectionId {
         switch self {
-        case let .header(section, _), let .summary(section, _, _, _), let .filter(section, _, _, _, _), let .result(section, _, _, _, _), let .info(section, _), let .loadMore(section, _): return section
+        case let .header(section, _), let .summary(section, _, _, _), let .filter(section, _, _, _, _), let .diffToggle(section, _, _, _, _), let .result(section, _, _, _, _, _), let .info(section, _), let .loadMore(section, _): return section
         }
     }
     var stableId: Int32 {
         switch self {
         case let .header(section, _): return section * 1000
         case let .summary(section, index, _, _): return section * 1000 + index
-        case let .filter(section, index, _, _, _), let .result(section, index, _, _, _): return section * 1000 + index
+        case let .filter(section, index, _, _, _), let .diffToggle(section, index, _, _, _), let .result(section, index, _, _, _, _): return section * 1000 + index
         case .info: return Int32.max - 1
         case .loadMore: return Int32.max
         }
@@ -91,10 +97,41 @@ case let .filter(_, _, title, value, kind):
             action: { arguments.selectSender() }
         )
     }
-        case let .result(_, _, title, value, event):
+        case let .diffToggle(_, _, title, hint, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData, systemStyle: .glass,
+                title: title, text: hint, value: value,
+                maximumNumberOfLines: 0,
+                sectionId: self.section, style: .blocks,
+                updated: { _ in arguments.toggleDiff() }
+            )
+        case let .result(_, _, title, value, diff, event):
+            // An attributed title is the only label in this item that wraps, so
+            // the change summary rides along as a second, dimmer line.
+            let attributedTitle: NSAttributedString?
+            if let diff {
+                let composed = NSMutableAttributedString(
+                    string: title,
+                    attributes: [
+                        .font: UIFont.systemFont(ofSize: 15.0),
+                        .foregroundColor: presentationData.theme.list.itemPrimaryTextColor
+                    ]
+                )
+                composed.append(NSAttributedString(
+                    string: "\n" + diff,
+                    attributes: [
+                        .font: UIFont.systemFont(ofSize: 13.0),
+                        .foregroundColor: presentationData.theme.list.itemSecondaryTextColor
+                    ]
+                ))
+                attributedTitle = composed
+            } else {
+                attributedTitle = nil
+            }
             return ItemListDisclosureItem(
                 presentationData: presentationData, systemStyle: .glass,
-                title: title, label: value, labelStyle: .text,
+                title: title, attributedTitle: attributedTitle,
+                label: value, labelStyle: .text,
                 sectionId: self.section, style: .blocks,
                 disclosureStyle: .arrow, action: { arguments.selectEvent(event) }
             )
@@ -134,6 +171,41 @@ private func jerkgramEventKindTitle(_ kind: JerkgramEventKind, strings: Jerkgram
     case .recoveredMedia: return strings.timeMachineMedia
     default: return kind.rawValue
     }
+}
+
+/// Compact inline summary of an edit: only the changed fragments survive, since a
+/// list row has no room for the untouched text. Both sides are capped first so a
+/// pathological message can never slow the list layout down.
+private func jerkgramTimeMachineInlineDiff(_ event: JerkgramCanonicalEvent) -> String? {
+    guard event.kind == .editedMessage,
+          let old = event.payload.previousText,
+          let new = event.payload.text else {
+        return nil
+    }
+
+    var fragments: [String] = []
+    for operation in JerkgramTextDiff.diff(
+        old: String(old.prefix(300)),
+        new: String(new.prefix(300))
+    ) {
+        switch operation {
+        case .equal:
+            break
+        case let .insert(value):
+            fragments.append("[+\(value)]")
+        case let .delete(value):
+            fragments.append("[-\(value)]")
+        case let .replace(old, new):
+            fragments.append("[-\(old)] [+\(new)]")
+        }
+    }
+
+    guard !fragments.isEmpty else {
+        return nil
+    }
+
+    let joined = fragments.joined()
+    return joined.count > 200 ? String(joined.prefix(200)) + "…" : joined
 }
 
 private func jerkgramDiffText(_ event: JerkgramCanonicalEvent) -> String {
@@ -205,7 +277,8 @@ public func jerkgramTimeMachineController(
     loadNextPage()
     let initial = JerkgramTimeMachineUIState(
         kinds: [.deletedMessage, .deletedReply, .editedMessage, .recoveredMedia],
-        senderPeerId: nil
+        senderPeerId: nil,
+        showsDiff: true
     )
     let stateValue = Atomic(value: initial)
     let statePromise = ValuePromise(initial, ignoreRepeated: true)
@@ -229,6 +302,13 @@ public func jerkgramTimeMachineController(
             } else {
                 current.senderPeerId = nil
             }
+            return current
+        }
+        statePromise.set(value)
+    }, toggleDiff: {
+        let value = stateValue.modify { current in
+            var current = current
+            current.showsDiff.toggle()
             return current
         }
         statePromise.set(value)
@@ -278,6 +358,7 @@ public func jerkgramTimeMachineController(
             .filter(1, 2, strings.timeMachineEdited, state.kinds.contains(.editedMessage) ? "✓" : "", .editedMessage),
             .filter(1, 3, strings.timeMachineMedia, state.kinds.contains(.recoveredMedia) ? "✓" : "", .recoveredMedia),
             .filter(1, 4, strings.timeMachineAuthor, state.senderPeerId.map(String.init) ?? strings.timeMachineAllAuthors, nil),
+            .diffToggle(1, 5, strings.timeMachineShowDiff, strings.timeMachineShowDiffHint, state.showsDiff),
             .header(2, strings.timeMachineResults),
         ]
         for (index, event) in results.enumerated() {
@@ -285,7 +366,8 @@ public func jerkgramTimeMachineController(
             let date = jerkgramTimeMachineDateText(event.observedAtMs, dateTimeFormat: presentationData.dateTimeFormat)
             let kind = jerkgramEventKindTitle(event.kind, strings: strings)
             let detail = date.isEmpty ? kind : "\(kind) · \(date)"
-            entries.append(.result(2, Int32(index + 1), String(text.prefix(120)), detail, event))
+            let diff = state.showsDiff ? jerkgramTimeMachineInlineDiff(event) : nil
+            entries.append(.result(2, Int32(index + 1), String(text.prefix(120)), detail, diff, event))
         }
         if results.isEmpty { entries.append(.info(2, strings.timeMachineEmpty)) }
         if page.hasMore { entries.append(.loadMore(2, strings.timeMachineLoadMore)) }

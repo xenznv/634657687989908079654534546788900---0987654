@@ -1974,7 +1974,8 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
             .disclosureDetail(2, 3, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
             .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home),
-            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
+            .disclosureDetail(2, 5, strings.historyStorageTitle, strings.historyStorageHint, "", .dataAndBackup),
+            .disclosureDetail(2, 6, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
         ]
     }
 
@@ -3215,6 +3216,9 @@ func ghostBaseSettingsPageController(
 
             case "debug.clearLog":
                 JerkgramDebugConsole.clearLog()
+                // The guard keeps the message text it may still need as a
+                // fallback; clearing the journal must not leave copies behind.
+                JerkgramMessageGuard.reset(accountPeerId: nil)
                 refreshResearchPage()
 
             case "hiddenGiftsSelf":

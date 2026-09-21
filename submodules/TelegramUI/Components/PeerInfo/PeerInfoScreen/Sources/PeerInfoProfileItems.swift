@@ -1201,6 +1201,21 @@ func infoItems(
     }
     
 
+    // Local history of this chat. It only makes sense when the profile was
+    // opened from a chat, where a concrete chat peer id exists.
+    if isOpenedFromChat, data.peer != nil {
+        items[.peerSettings]!.append(
+            PeerInfoScreenDisclosureItem(
+                id: 991777,
+                text: presentationData.strings.jerkgram.timeMachine,
+                icon: PresentationResourcesSettings.chatHistory,
+                action: {
+                    interaction.openTimeMachine()
+                }
+            )
+        )
+    }
+
     var result: [(AnyHashable, [PeerInfoScreenItem])] = []
     for section in InfoSection.allCases {
         if let sectionItems = items[section], !sectionItems.isEmpty {
