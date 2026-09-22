@@ -974,12 +974,6 @@ public extension JerkgramStrings {
     var timeMachineAllAuthors: String { self.languageCode == "ru" ? "Все" : "All" }
     var timeMachineResults: String { self.languageCode == "ru" ? "Результаты" : "Results" }
     var timeMachineEmpty: String { self.languageCode == "ru" ? "Локальных изменений не найдено." : "No local changes found." }
-    var timeMachineShowDiff: String { self.languageCode == "ru" ? "Показывать изменения" : "Show Changes" }
-    var timeMachineShowDiffHint: String {
-        self.languageCode == "ru"
-            ? "Выводить прямо в списке, что именно изменилось: [+добавлено] [-удалено]."
-            : "Show what exactly changed right in the list: [+added] [-removed]."
-    }
     var timeMachineLoadMore: String { self.languageCode == "ru" ? "Загрузить ещё" : "Load More" }
 }
 
@@ -1258,29 +1252,5 @@ public extension JerkgramStrings {
 
     var forwardWithoutAuthor: String {
         return self.languageCode == "ru" ? "Переслать без автора" : "Forward without author"
-    }
-
-    // Local history: retention rules, storage usage and the in-app markers
-    // that tell the user why a message looks different from the network copy.
-    var historyStorageTitle: String {
-        return self.languageCode == "ru" ? "История и хранение" : "History & Storage"
-    }
-
-    var historyStorageHint: String {
-        return self.languageCode == "ru"
-            ? "Сроки хранения, лимит медиа, занятое место"
-            : "Retention, media limit, storage used"
-    }
-
-    var historyStorageUsed: String {
-        return self.languageCode == "ru" ? "Занято" : "Storage used"
-    }
-
-    var deletedMessageBadge: String {
-        return self.languageCode == "ru" ? "удалено" : "deleted"
-    }
-
-    func editedMessageBadge(_ versions: Int) -> String {
-        return self.languageCode == "ru" ? "изм. \(versions)" : "edited \(versions)"
     }
 }

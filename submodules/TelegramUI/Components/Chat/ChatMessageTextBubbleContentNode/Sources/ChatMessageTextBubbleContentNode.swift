@@ -287,19 +287,9 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                     dateReactionsAndPeers = ([], [])
                 }
                 
-                // Locally recorded versions of this message: the fork keeps an
-                // edit history and a deletion marker as message attributes.
-                var ghostBaseEditedLabel: String?
-                var ghostBaseDeletedLabel: String?
                 for attribute in item.message.attributes {
                     if let attribute = attribute as? EditedMessageAttribute {
                         edited = !attribute.isHidden
-                    } else if let attribute = attribute as? GhostBaseMessageAttribute {
-                        if attribute.isDeleted {
-                            ghostBaseDeletedLabel = item.presentationData.strings.jerkgram.deletedMessageBadge
-                        } else if !attribute.editHistoryTexts.isEmpty {
-                            ghostBaseEditedLabel = item.presentationData.strings.jerkgram.editedMessageBadge(attribute.editHistoryTexts.count)
-                        }
                     } else if let attribute = attribute as? ViewCountMessageAttribute {
                         viewCount = attribute.count
                     } else if let attribute = attribute as? ReplyThreadMessageAttribute, case .peer = item.chatLocation {
@@ -759,9 +749,7 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                         hasAutoremove: item.message.isSelfExpiring,
                         canViewReactionList: canViewMessageReactionList(message: EngineMessage(item.topMessage)),
                         animationCache: item.controllerInteraction.presentationContext.animationCache,
-                        animationRenderer: item.controllerInteraction.presentationContext.animationRenderer,
-                        ghostBaseEditedLabel: ghostBaseEditedLabel,
-                        ghostBaseDeletedLabel: ghostBaseDeletedLabel
+                        animationRenderer: item.controllerInteraction.presentationContext.animationRenderer
                     ))
                 }
                 

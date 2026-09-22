@@ -2602,20 +2602,6 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                 if item.content.firstMessageAttributes.updatingMedia != nil {
                     edited = true
                 }
-                // Locally recorded versions of this message: the fork keeps an
-                // edit history and a deletion marker as message attributes.
-                var ghostBaseEditedLabel: String?
-                var ghostBaseDeletedLabel: String?
-                for attribute in message.attributes {
-                    guard let attribute = attribute as? GhostBaseMessageAttribute else {
-                        continue
-                    }
-                    if attribute.isDeleted {
-                        ghostBaseDeletedLabel = item.presentationData.strings.jerkgram.deletedMessageBadge
-                    } else if !attribute.editHistoryTexts.isEmpty {
-                        ghostBaseEditedLabel = item.presentationData.strings.jerkgram.editedMessageBadge(attribute.editHistoryTexts.count)
-                    }
-                }
                 var viewCount: Int?
                 var dateReplies = 0
                 var starsCount: Int64?
@@ -2692,9 +2678,7 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                     hasAutoremove: message.isSelfExpiring,
                     canViewReactionList: canViewMessageReactionList(message: EngineMessage(message)),
                     animationCache: item.controllerInteraction.presentationContext.animationCache,
-                    animationRenderer: item.controllerInteraction.presentationContext.animationRenderer,
-                    ghostBaseEditedLabel: ghostBaseEditedLabel,
-                    ghostBaseDeletedLabel: ghostBaseDeletedLabel
+                    animationRenderer: item.controllerInteraction.presentationContext.animationRenderer
                 ))
 
                 mosaicStatusSizeAndApply = statusSuggestedWidthAndContinue.1(statusSuggestedWidthAndContinue.0)

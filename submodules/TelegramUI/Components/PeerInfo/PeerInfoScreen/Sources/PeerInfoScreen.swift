@@ -36,7 +36,6 @@ import TextFormat
 import StatisticsUI
 import StickerResources
 import SettingsUI
-import ChatSearchNavigationContentNode
 import ChatListUI
 import CallListUI
 import AccountUtils
@@ -760,27 +759,6 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     return
                 }
                 self.editingOpenBusinessChatBots()
-            },
-            openTimeMachine: { [weak self] in
-                guard let self else {
-                    return
-                }
-                guard let chatPeerId = self.chatLocation.peerId else {
-                    return
-                }
-                guard let navigationController = self.controller?.navigationController as? NavigationController else {
-                    return
-                }
-
-                let controller = jerkgramTimeMachineController(
-                    context: self.context,
-                    chatPeerId: chatPeerId.toInt64(),
-                    initialQuery: "",
-                    navigateToMessage: { [weak self] messageId in
-                        self?.openChat(peerId: messageId.peerId)
-                    }
-                )
-                navigationController.pushViewController(controller)
             },
             getController: { [weak self] in
                 return self?.controller
@@ -2814,10 +2792,8 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
             }
         }
         self.data = data
-        if let peer = data.peer {
-            // Bounded asynchronous observation; no JSON or file I/O here. Every
-            // peer kind is observed, and the store drops unchanged snapshots, so
-            // channels and groups get the same history as users.
+        if let peer = data.peer, case .user = peer {
+            // Bounded asynchronous observation; no JSON or file I/O here.
             ghostBaseRecordObservedProfileV11G(
                 accountPeerId: self.context.account.peerId,
                 peer: peer,

@@ -653,19 +653,7 @@ func ghostBaseRecordObservedProfileV11G(
     peer: EnginePeer,
     cachedData: CachedPeerData?
 ) {
-    // "About" lives in a different cached payload per peer kind. A payload that
-    // does not carry one must stay nil so the history never reports a phantom
-    // change for channels and groups.
-    let about: String?
-    if let userData = cachedData as? CachedUserData {
-        about = userData.about
-    } else if let channelData = cachedData as? CachedChannelData {
-        about = channelData.about
-    } else if let groupData = cachedData as? CachedGroupData {
-        about = groupData.about
-    } else {
-        about = nil
-    }
+    let about = (cachedData as? CachedUserData)?.about
     let snapshot = GhostBaseObservedProfileSnapshotV11G(
         observedAt: Int64(Date().timeIntervalSince1970),
         displayName: peer.compactDisplayTitle,
@@ -1139,22 +1127,10 @@ final class GhostBaseProfileReportPaneNode: ASDisplayNode, PeerInfoPaneNode, UIS
                 )
 
         case .profileHistory:
-            let report = GhostBaseProfileReportStoreV11G.profileReport(
+            return GhostBaseProfileReportStoreV11G.profileReport(
                 accountPeerId: accountPeerId.toInt64(),
                 peerId: peerId.toInt64()
-            )
-            guard let report else {
-                return "История профиля пока пуста."
-            }
-            // A channel has a title, not a person's name; the stored history is
-            // shared, so only the wording of this one line differs.
-            if peerId.namespace == Namespaces.Peer.CloudChannel {
-                return report.replacingOccurrences(
-                    of: "Имя: ",
-                    with: "Название: "
-                )
-            }
-            return report
+            ) ?? "История профиля пока пуста."
 
         case .personalChannel:
             if let report = GhostBaseProfileReportStoreV11G.personalChannelReport(
