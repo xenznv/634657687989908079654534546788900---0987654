@@ -2960,19 +2960,10 @@ private func jerkgramRecordGuardNotes(
                 continue
             }
         }
-        let messageId: Int32
-        switch message.id {
-        case let .Id(id):
-            messageId = id.id
-        case .Partial:
-            // A partial id carries no message number, so there is nothing to
-            // look the remembered text up by later.
-            continue
-        }
         notes.append(JerkgramIncomingMessageNote(
             chatPeerId: chatPeerId.toInt64(),
             messageNamespace: message.id.namespace,
-            messageId: messageId,
+            messageId: message.id.id,
             globallyUniqueId: message.globallyUniqueId,
             senderPeerId: message.authorId?.toInt64(),
             timestampMs: Int64(message.timestamp) * 1000,
@@ -4607,16 +4598,13 @@ func replayFinalState(
                     }
                 }
             case let .DeleteMessagesWithGlobalIds(ids):
+                let ghostBaseMessageIds = transaction.messageIdsForGlobalIds(ids)
                 // Jerkgram: gate every id on its own. A replayed batch mixes
                 // chats, and one chat without capture must not discard the
-                // deletions of all the others. The operation carries global
-                // (Int32) ids, so resolve each one before deciding.
+                // deletions of all the others.
                 var ghostBaseCapturedIds: [MessageId] = []
-                var ghostBaseCapturedGlobalIds = Set<Int32>()
-                for globalId in ids {
-                    guard let id = transaction.messageIdsForGlobalIds([globalId]).first else {
-                        continue
-                    }
+                var ghostBaseCapturedGlobalIds = Set<Int64>()
+                for id in ghostBaseMessageIds {
                     guard JerkgramRetentionRuntime.shouldCapture(
                         accountPeerId: accountPeerId.toInt64(),
                         chatPeerId: id.peerId.toInt64(),
@@ -4625,8 +4613,11 @@ func replayFinalState(
                     ) else {
                         continue
                     }
+                    guard let globallyUniqueId = transaction.getMessage(id)?.globallyUniqueId else {
+                        continue
+                    }
                     ghostBaseCapturedIds.append(id)
-                    ghostBaseCapturedGlobalIds.insert(globalId)
+                    ghostBaseCapturedGlobalIds.insert(globallyUniqueId)
                 }
                 let ghostBasePlainIds = ids.filter { !ghostBaseCapturedGlobalIds.contains($0) }
 
