@@ -2973,7 +2973,9 @@ func ghostBaseSettingsPageController(
                             value: draftValue,
                             secure: secure
                         )
-                    ]
+                    ],
+                    style: .blocks,
+                    animateChanges: false
                 )
                 return (controllerState, (listState, arguments as Any))
             }
