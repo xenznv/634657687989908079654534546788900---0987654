@@ -1,7 +1,7 @@
 import Foundation
 
-// Client for the external archive API served by the Telegram Business saver
-// bot (see natursavebot). Read-only: lists deleted/edited messages that the
+// Client for the external archive API served by the message saver bot.
+// Read-only: lists deleted/edited messages that the
 // Telegram server no longer returns, so the fork can restore them locally.
 
 public enum JerkgramArchiveSettingsKey {

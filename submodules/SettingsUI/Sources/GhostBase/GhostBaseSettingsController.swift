@@ -3281,14 +3281,14 @@ func ghostBaseSettingsPageController(
             switch action {
             case "archive.editURL":
                 let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
-                presentArchiveValueEditor(strings.archiveServerURL, JerkgramArchiveSettings.serverURL, false, { value in
+                presentArchiveValueEditor(strings.archiveServerURL, JerkgramArchiveSettings.serverURL, false, commit: { value in
                     JerkgramArchiveSettings.serverURL = value
                     refreshResearchPage()
                 })
 
             case "archive.editToken":
                 let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
-                presentArchiveValueEditor(strings.archiveServerToken, JerkgramArchiveSettings.token, true, { value in
+                presentArchiveValueEditor(strings.archiveServerToken, JerkgramArchiveSettings.token, true, commit: { value in
                     JerkgramArchiveSettings.token = value
                     refreshResearchPage()
                 })
@@ -3903,7 +3903,7 @@ func ghostBaseSettingsPageController(
             animateChanges: false
         )
 
-        return (controllerState, (listState, arguments))
+        return (controllerState, (listState, arguments as Any))
     }
 
     let controller = ItemListController(
