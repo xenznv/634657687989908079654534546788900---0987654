@@ -2637,6 +2637,71 @@ public func ghostBaseSettingsController(
     )
 }
 
+private final class JerkgramArchiveValueEditorArguments {
+    let update: (String) -> Void
+    let commit: () -> Void
+
+    init(update: @escaping (String) -> Void, commit: @escaping () -> Void) {
+        self.update = update
+        self.commit = commit
+    }
+}
+
+private enum JerkgramArchiveValueEditorEntry: ItemListNodeEntry {
+    case input(sectionId: ItemListSectionId, value: String, secure: Bool)
+
+    var section: ItemListSectionId {
+        switch self {
+        case let .input(sectionId, _, _):
+            return sectionId
+        }
+    }
+
+    var stableId: Int32 {
+        switch self {
+        case .input:
+            return 0
+        }
+    }
+
+    static func ==(lhs: JerkgramArchiveValueEditorEntry, rhs: JerkgramArchiveValueEditorEntry) -> Bool {
+        switch lhs {
+        case let .input(_, lhsValue, lhsSecure):
+            if case let .input(_, rhsValue, rhsSecure) = rhs {
+                return lhsValue == rhsValue && lhsSecure == rhsSecure
+            }
+            return false
+        }
+    }
+
+    static func <(lhs: JerkgramArchiveValueEditorEntry, rhs: JerkgramArchiveValueEditorEntry) -> Bool {
+        return lhs.stableId < rhs.stableId
+    }
+
+    func item(presentationData: ItemListPresentationData, arguments: Any) -> ListViewItem {
+        let arguments = arguments as! JerkgramArchiveValueEditorArguments
+        switch self {
+        case let .input(_, value, secure):
+            return ItemListSingleLineInputItem(
+                presentationData: presentationData,
+                systemStyle: .glass,
+                title: NSAttributedString(),
+                text: value,
+                placeholder: "",
+                type: secure ? .password : .regular(capitalization: false, autocorrection: false),
+                returnKeyType: .done,
+                alignment: .default,
+                spacing: 0.0,
+                clearType: .none,
+                maxLength: 0,
+                sectionId: self.section,
+                textUpdated: { arguments.update($0) },
+                action: {}
+            )
+        }
+    }
+}
+
 private final class GhostBaseSendStylePageArguments {
     let select: (String) -> Void
 
@@ -2848,7 +2913,6 @@ func ghostBaseSettingsPageController(
     }
 
     var pushController: ((ViewController) -> Void)?
-    var presentAlertImpl: ((UIAlertController) -> Void)?
 
     var openSendTextStyleImpl: (() -> Void)?
 
@@ -2866,28 +2930,56 @@ func ghostBaseSettingsPageController(
     }
 
     // Archive server text editors (URL / token) and the connection test.
+    // A plain UIAlertController cannot be presented through the fork's
+    // ViewController.present(_:in:), so the editor is a small list screen with
+    // one input item, pushed like every other settings page.
     func presentArchiveValueEditor(
         _ title: String,
         _ value: String,
         _ secure: Bool,
         commit: @escaping (String) -> Void
     ) {
-        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
-        alert.addTextField { textField in
-            textField.text = value
-            textField.isSecureTextEntry = secure
-            textField.autocapitalizationType = .none
-            textField.autocorrectionType = .no
-            textField.spellCheckingType = .no
-            textField.keyboardType = .URL
-            textField.clearButtonMode = .whileEditing
-        }
-        let presentationData = context.sharedContext.currentPresentationData.with { $0 }
-        alert.addAction(UIAlertAction(title: presentationData.strings.Common_Cancel, style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: presentationData.strings.Common_Done, style: .default, handler: { _ in
-            commit(alert.textFields?.first?.text ?? "")
-        }))
-        presentAlertImpl?(alert)
+        var draftValue = value
+        let arguments = JerkgramArchiveValueEditorArguments(
+            update: { draft in
+                draftValue = draft
+            },
+            commit: {
+                commit(draftValue)
+            }
+        )
+
+        let signal = context.sharedContext.presentationData
+            |> map { presentationData -> (ItemListControllerState, (ItemListNodeState, Any)) in
+                let controllerState = ItemListControllerState(
+                    presentationData: ItemListPresentationData(presentationData),
+                    title: .text(title),
+                    leftNavigationButton: nil,
+                    rightNavigationButton: ItemListNavigationButton(
+                        content: .text(presentationData.strings.Common_Done),
+                        style: .bold,
+                        enabled: true,
+                        action: {
+                            arguments.commit()
+                        }
+                    ),
+                    backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Cancel)
+                )
+                let listState = ItemListNodeState(
+                    presentationData: ItemListPresentationData(presentationData),
+                    entries: [
+                        JerkgramArchiveValueEditorEntry.input(
+                            sectionId: 0,
+                            value: draftValue,
+                            secure: secure
+                        )
+                    ]
+                )
+                return (controllerState, (listState, arguments as Any))
+            }
+
+        let controller = ItemListController(context: context, state: signal)
+        pushController?(controller)
     }
 
     let runHiddenGiftsProbe: (
@@ -3948,10 +4040,6 @@ func ghostBaseSettingsPageController(
 
     pushController = { [weak controller] target in
         controller?.push(target)
-    }
-
-    presentAlertImpl = { [weak controller] alert in
-        controller?.present(alert, in: .window(.root))
     }
 
     return controller
