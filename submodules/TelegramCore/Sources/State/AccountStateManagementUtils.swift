@@ -4561,31 +4561,6 @@ func replayFinalState(
                                 mediaBox: mediaBox,
                                 message: currentMessage
                             )
-                            JerkgramCaptureRecorder.record(
-                                accountPeerId: accountPeerId.toInt64(),
-                                chatPeerId: currentMessage.id.peerId.toInt64(),
-                                kind: .deletedMessage,
-                                senderPeerId: currentMessage.author?.id.toInt64(),
-                                messageNamespace: currentMessage.id.namespace,
-                                messageId: currentMessage.id.id,
-                                observedAtMs: Int64(Date().timeIntervalSince1970 * 1000.0),
-                                payload: JerkgramEventPayload(text: currentMessage.text)
-                            )
-                            if !currentMessage.media.isEmpty {
-                                JerkgramCaptureRecorder.record(
-                                    accountPeerId: accountPeerId.toInt64(),
-                                    chatPeerId: currentMessage.id.peerId.toInt64(),
-                                    kind: .recoveredMedia,
-                                    senderPeerId: currentMessage.author?.id.toInt64(),
-                                    messageNamespace: currentMessage.id.namespace,
-                                    messageId: currentMessage.id.id,
-                                    observedAtMs: Int64(Date().timeIntervalSince1970 * 1000.0),
-                                    payload: JerkgramEventPayload(
-                                        mediaKind: "message-media",
-                                        metadata: ["itemCount": String(currentMessage.media.count)]
-                                    )
-                                )
-                            }
                             var updatedAttributes = currentMessage.attributes
                             let originalText: String? = currentMessage.text.isEmpty
                                 ? nil
@@ -4677,31 +4652,6 @@ func replayFinalState(
                             mediaBox: mediaBox,
                             message: currentMessage
                         )
-                        JerkgramCaptureRecorder.record(
-                                accountPeerId: accountPeerId.toInt64(),
-                                chatPeerId: currentMessage.id.peerId.toInt64(),
-                                kind: .deletedMessage,
-                                senderPeerId: currentMessage.author?.id.toInt64(),
-                                messageNamespace: currentMessage.id.namespace,
-                                messageId: currentMessage.id.id,
-                                observedAtMs: Int64(Date().timeIntervalSince1970 * 1000.0),
-                                payload: JerkgramEventPayload(text: currentMessage.text)
-                        )
-                            if !currentMessage.media.isEmpty {
-                                JerkgramCaptureRecorder.record(
-                                    accountPeerId: accountPeerId.toInt64(),
-                                    chatPeerId: currentMessage.id.peerId.toInt64(),
-                                    kind: .recoveredMedia,
-                                    senderPeerId: currentMessage.author?.id.toInt64(),
-                                    messageNamespace: currentMessage.id.namespace,
-                                    messageId: currentMessage.id.id,
-                                    observedAtMs: Int64(Date().timeIntervalSince1970 * 1000.0),
-                                    payload: JerkgramEventPayload(
-                                        mediaKind: "message-media",
-                                        metadata: ["itemCount": String(currentMessage.media.count)]
-                                    )
-                                )
-                            }
                         var updatedAttributes = currentMessage.attributes
                         let originalText: String? = currentMessage.text.isEmpty
                             ? nil
@@ -4862,19 +4812,6 @@ func replayFinalState(
                     // Capture text transitions and entity-only edits.
                     if ghostBaseSaveEditHistory,
                        previousMessage.text != message.text || previousEntities != updatedEntities {
-                        JerkgramCaptureRecorder.record(
-                            accountPeerId: accountPeerId.toInt64(),
-                            chatPeerId: id.peerId.toInt64(),
-                            kind: .editedMessage,
-                            senderPeerId: previousMessage.author?.id.toInt64(),
-                            messageNamespace: id.namespace,
-                            messageId: id.id,
-                            observedAtMs: Int64(Date().timeIntervalSince1970 * 1000.0),
-                            payload: JerkgramEventPayload(
-                                text: message.text,
-                                previousText: previousMessage.text
-                            )
-                        )
                         // A history entry describes an edit event: `previousMessage`
                         // is what existed before the edit, while the date shown above
                         // that saved version must be the date on which it was changed.

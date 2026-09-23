@@ -841,6 +841,7 @@ enum GhostBaseSettingsPage: Equatable {
     case debugResearch
     case about
     case debugConsole
+    case archiveServer
 
     var title: String {
         switch self {
@@ -870,6 +871,8 @@ enum GhostBaseSettingsPage: Equatable {
             return "About"
         case .debugConsole:
             return "Debug Console"
+        case .archiveServer:
+            return "Archive Server"
         }
     }
 
@@ -902,6 +905,8 @@ enum GhostBaseSettingsPage: Equatable {
             return strings.about
         case .debugConsole:
             return strings.debugConsole
+        case .archiveServer:
+            return strings.archiveServer
         }
     }
 }
@@ -982,6 +987,7 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
     case stylePreview(Int32, Int32, String)
     case aboutChannel(Int32, Int32, String, EnginePeer?, String, Bool)
     case researchAction(Int32, Int32, String, String)
+    case actionValue(Int32, Int32, String, String, String)
     case researchInfo(Int32, Int32, String)
     case info(Int32, String)
 
@@ -1014,6 +1020,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .aboutChannel(section, _, _, _, _, _):
             return section
         case let .researchAction(section, _, _, _):
+            return section
+        case let .actionValue(section, _, _, _, _):
             return section
         case let .researchInfo(section, _, _):
             return section
@@ -1051,6 +1059,8 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .aboutChannel(section, index, _, _, _, _):
             return section * 1000 + index
         case let .researchAction(section, index, _, _):
+            return section * 1000 + index
+        case let .actionValue(section, index, _, _, _):
             return section * 1000 + index
         case let .researchInfo(section, index, _):
             return section * 1000 + index
@@ -1126,6 +1136,11 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
         case let .researchAction(ls, li, lt, la):
             if case let .researchAction(rs, ri, rt, ra) = rhs {
                 return ls == rs && li == ri && lt == rt && la == ra
+            }
+            return false
+        case let .actionValue(ls, li, lt, lv, la):
+            if case let .actionValue(rs, ri, rt, rv, ra) = rhs {
+                return ls == rs && li == ri && lt == rt && lv == rv && la == ra
             }
             return false
         case let .researchInfo(ls, li, lt):
@@ -1374,6 +1389,21 @@ private enum GhostBaseSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section,
                 style: .blocks,
                 disclosureStyle: actionId.hasPrefix("https://") ? .arrow : .none,
+                action: {
+                    arguments.runResearchAction(actionId)
+                }
+            )
+
+        case let .actionValue(_, _, title, value, actionId):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                systemStyle: .glass,
+                title: title,
+                label: value,
+                labelStyle: .text,
+                sectionId: self.section,
+                style: .blocks,
+                disclosureStyle: .none,
                 action: {
                     arguments.runResearchAction(actionId)
                 }
@@ -1974,7 +2004,8 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
             .disclosureDetail(2, 3, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
             .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home),
-            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
+            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole),
+            .disclosureDetail(2, 6, strings.archiveServer, strings.archiveServerHint, "", .archiveServer)
         ]
     }
 
@@ -2001,6 +2032,21 @@ private func ghostBaseSettingsEntries(
             .toggle(1, 41, GhostBaseKey.messageCharacterCount, strings.messageCharacterCount, state.messageCharacterCount),
             .toggle(1, 42, GhostBaseKey.hideOwnPhone, strings.hideMyPhone, state.hideOwnPhone),
             .info(1, strings.hidePhoneHint)
+        ]
+    }
+
+    if page == .archiveServer {
+        let url = JerkgramArchiveSettings.serverURL
+        let hasToken = !JerkgramArchiveSettings.token.isEmpty
+        let status = JerkgramArchiveSettings.status
+        return [
+            .header(0, strings.archiveServerConnection),
+            .actionValue(0, 1, strings.archiveServerURL, url.isEmpty ? strings.archiveServerNotSet : url, "archive.editURL"),
+            .actionValue(0, 2, strings.archiveServerToken, hasToken ? strings.archiveServerConfigured : strings.archiveServerNotSet, "archive.editToken"),
+            .actionValue(0, 3, strings.archiveServerTest, "", "archive.test"),
+            .header(1, strings.archiveServerStatusHeader),
+            .researchInfo(1, 1, status.isEmpty ? strings.archiveServerStatusIdle : status),
+            .info(2, strings.archiveServerHintBody)
         ]
     }
 
@@ -2802,6 +2848,7 @@ func ghostBaseSettingsPageController(
     }
 
     var pushController: ((ViewController) -> Void)?
+    var presentAlertImpl: ((UIAlertController) -> Void)?
 
     var openSendTextStyleImpl: (() -> Void)?
 
@@ -2816,6 +2863,31 @@ func ghostBaseSettingsPageController(
 
     let refreshResearchPage: () -> Void = {
         statePromise.set(stateValue.with { $0 })
+    }
+
+    // Archive server text editors (URL / token) and the connection test.
+    func presentArchiveValueEditor(
+        _ title: String,
+        _ value: String,
+        _ secure: Bool,
+        commit: @escaping (String) -> Void
+    ) {
+        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
+        alert.addTextField { textField in
+            textField.text = value
+            textField.isSecureTextEntry = secure
+            textField.autocapitalizationType = .none
+            textField.autocorrectionType = .no
+            textField.spellCheckingType = .no
+            textField.keyboardType = .URL
+            textField.clearButtonMode = .whileEditing
+        }
+        let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+        alert.addAction(UIAlertAction(title: presentationData.strings.Common_Cancel, style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: presentationData.strings.Common_Done, style: .default, handler: { _ in
+            commit(alert.textFields?.first?.text ?? "")
+        }))
+        presentAlertImpl?(alert)
     }
 
     let runHiddenGiftsProbe: (
@@ -3207,6 +3279,41 @@ func ghostBaseSettingsPageController(
         },
         runResearchAction: { action in
             switch action {
+            case "archive.editURL":
+                let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
+                presentArchiveValueEditor(strings.archiveServerURL, JerkgramArchiveSettings.serverURL, false, { value in
+                    JerkgramArchiveSettings.serverURL = value
+                    refreshResearchPage()
+                })
+
+            case "archive.editToken":
+                let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
+                presentArchiveValueEditor(strings.archiveServerToken, JerkgramArchiveSettings.token, true, { value in
+                    JerkgramArchiveSettings.token = value
+                    refreshResearchPage()
+                })
+
+            case "archive.test":
+                let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
+                guard let client = JerkgramArchiveClient.fromSettings() else {
+                    JerkgramArchiveSettings.status = strings.archiveServerStatusNotConfigured
+                    refreshResearchPage()
+                    break
+                }
+                JerkgramArchiveSettings.status = strings.archiveServerStatusTesting
+                refreshResearchPage()
+                client.fetchMessageCount { result in
+                    DispatchQueue.main.async {
+                        switch result {
+                        case let .success(count):
+                            JerkgramArchiveSettings.status = strings.archiveServerStatusOK(count)
+                        case let .failure(error):
+                            JerkgramArchiveSettings.status = strings.archiveServerStatusFailed("\(error)")
+                        }
+                        refreshResearchPage()
+                    }
+                }
+
             case "copyExtensionDiagnostics":
                 UIPasteboard.general.string = BuildConfig.jerkgramExtensionDiagnosticsReport()
 
@@ -3841,6 +3948,10 @@ func ghostBaseSettingsPageController(
 
     pushController = { [weak controller] target in
         controller?.push(target)
+    }
+
+    presentAlertImpl = { [weak controller] alert in
+        controller?.present(alert, in: .window(.root))
     }
 
     return controller

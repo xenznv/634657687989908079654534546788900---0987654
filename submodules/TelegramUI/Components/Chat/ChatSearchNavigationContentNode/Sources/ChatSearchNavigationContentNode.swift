@@ -30,8 +30,6 @@ public final class ChatSearchNavigationContentNode: NavigationBarContentNode {
     private let close: (background: GlassBackgroundView, icon: UIImageView)
     
     private let interaction: ChatPanelInterfaceInteraction
-    private let jerkgramTimeMachineBackground: GlassBackgroundView
-    private let jerkgramTimeMachineLabel: UILabel
     
     private var hasActivity: Bool = false
     private var searchingActivityDisposable: Disposable?
@@ -45,10 +43,6 @@ public final class ChatSearchNavigationContentNode: NavigationBarContentNode {
         self.strings = strings
         self.chatLocation = chatLocation
         self.interaction = interaction
-        self.jerkgramTimeMachineBackground = GlassBackgroundView()
-        self.jerkgramTimeMachineLabel = UILabel()
-        self.jerkgramTimeMachineLabel.textAlignment = .center
-        self.jerkgramTimeMachineLabel.font = UIFont.systemFont(ofSize: 13.0, weight: .semibold)
         
         self.backgroundContainer = GlassBackgroundContainerView()
         self.backgroundView = GlassBackgroundView()
@@ -98,12 +92,6 @@ public final class ChatSearchNavigationContentNode: NavigationBarContentNode {
         
         self.view.addSubview(self.backgroundContainer)
 
-        // Keep the Time Machine control above the full-size background container.
-        self.view.addSubview(self.jerkgramTimeMachineBackground)
-        self.jerkgramTimeMachineBackground.contentView.addSubview(self.jerkgramTimeMachineLabel)
-        self.jerkgramTimeMachineBackground.contentView.addGestureRecognizer(
-            UITapGestureRecognizer(target: self, action: #selector(self.jerkgramOpenTimeMachine))
-        )
         self.backgroundView.contentView.addSubview(self.searchBar.view)
         
         self.backgroundContainer.contentView.addSubview(self.close.background)
@@ -238,23 +226,6 @@ public final class ChatSearchNavigationContentNode: NavigationBarContentNode {
         
         transition.setFrame(view: self.close.background, frame: closeFrame)
         self.close.background.update(size: closeFrame.size, cornerRadius: closeFrame.height * 0.5, isDark: self.theme.overallDarkAppearance, tintColor: .init(kind: self.preferClearGlass ? .clear : .panel), isInteractive: true, transition: transition)
-        
-        let timeMachineFrame = CGRect(
-            x: leftInset + 16.0,
-            y: 56.0,
-            width: size.width - leftInset - rightInset - 32.0,
-            height: 36.0
-        )
-        self.jerkgramTimeMachineLabel.text = self.strings.jerkgram.timeMachine
-        self.jerkgramTimeMachineLabel.textColor = self.theme.chat.inputPanel.panelControlColor
-        transition.setFrame(view: self.jerkgramTimeMachineBackground, frame: timeMachineFrame)
-        self.jerkgramTimeMachineBackground.update(
-            size: timeMachineFrame.size, cornerRadius: 18.0,
-            isDark: self.theme.overallDarkAppearance,
-            tintColor: .init(kind: self.preferClearGlass ? .clear : .panel),
-            isInteractive: true, transition: transition
-        )
-        self.jerkgramTimeMachineLabel.frame = CGRect(origin: .zero, size: timeMachineFrame.size)
 
         return size
     }
@@ -329,21 +300,6 @@ public final class ChatSearchNavigationContentNode: NavigationBarContentNode {
                 let _ = self.updateLayout(size: params.size, leftInset: params.leftInset, rightInset: params.rightInset, transition: .immediate)
             }
         }
-    }
-    @objc private func jerkgramOpenTimeMachine() {
-        guard let chatPeerId = self.chatLocation.peerId else { return }
-        let controller = jerkgramTimeMachineController(
-            context: self.context,
-            chatPeerId: chatPeerId.toInt64(),
-            initialQuery: self.searchBar.text,
-            navigateToMessage: { [weak self] messageId in
-                self?.interaction.navigateToMessage(messageId, false, false, .generic)
-            }
-        )
-        self.interaction.presentController(
-            controller,
-            ViewControllerPresentationArguments(presentationAnimation: .modalSheet)
-        )
     }
 
 }

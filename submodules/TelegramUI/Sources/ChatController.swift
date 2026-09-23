@@ -269,6 +269,9 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     var didHandlePerformDismissAction: Bool = false
     var didInitializePersistentPeerInterfaceData: Bool = false
 
+    // Jerkgram: archive sync runs once per chat controller instance.
+    var jerkgramArchiveSyncRequested: Bool = false
+
     var preloadNextChatPeerId: EnginePeer.Id? = nil
     let preloadNextChatPeerIdDisposable = MetaDisposable()
 
@@ -7674,63 +7677,14 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
 
         self.didAppear = true
 
-        if case .standard(.default) = self.mode, let chatPeerId = self.chatLocation.peerId {
-            let accountPeerId = self.context.account.peerId.toInt64()
-            let chatPeerIdValue = chatPeerId.toInt64()
-            Queue.concurrentDefaultQueue().async { [weak self] in
-                guard let self else { return }
-                let rootURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-                    .appendingPathComponent("Jerkgram", isDirectory: true)
-                let watermarkStore = JerkgramVisitWatermarkStore(rootURL: rootURL)
-                let previousSequence = watermarkStore.previousSequence(
-                    accountPeerId: accountPeerId,
-                    chatPeerId: chatPeerIdValue
-                )
-                guard let records = try? JerkgramCaptureRecorder.readyIndexRecords(
-                    accountPeerId: accountPeerId,
-                    chatPeerId: chatPeerIdValue,
-                    afterSequence: previousSequence,
-                    throughSequence: nil
-                ) else { return }
-                guard let changes = try? watermarkStore.snapshotChangesSinceLastOpening(
-                    accountPeerId: accountPeerId,
-                    chatPeerId: chatPeerIdValue,
-                    records: records
-                ), changes.deletedCount + changes.editedCount + changes.recoveredMediaCount > 0 else { return }
-                Queue.mainQueue().async { [weak self] in
-                    guard let self, self.viewIfLoaded?.window != nil else { return }
-                    let text = self.presentationData.strings.jerkgram.changesSinceLastOpening(
-                        changes.deletedCount,
-                        changes.editedCount,
-                        changes.recoveredMediaCount
-                    )
-                    self.present(UndoOverlayController(
-                        presentationData: self.presentationData,
-                        content: .info(
-                            title: nil,
-                            text: text,
-                            timeout: 6.0,
-                            customUndoText: self.presentationData.strings.jerkgram.timeMachine
-                        ),
-                        elevatedLayout: false,
-                        position: .top,
-                        action: { [weak self] action in
-                            guard case .undo = action, let self else { return false }
-                            let controller = jerkgramTimeMachineController(
-                                context: self.context,
-                                chatPeerId: chatPeerIdValue,
-                                initialQuery: "",
-                                eventIds: Set(changes.eventIds),
-                                navigateToMessage: { [weak self] messageId in
-                                    self?.navigateToMessage(from: nil, to: .id(messageId, NavigateToMessageParams(timestamp: nil, quote: nil)), forceInCurrentChat: true)
-                                }
-                            )
-                            self.push(controller)
-                            return true
-                        }
-                    ), in: .current)
-                }
-            }
+        if !self.jerkgramArchiveSyncRequested, let peerId = self.chatLocation.peerId {
+            self.jerkgramArchiveSyncRequested = true
+            jerkgramSyncArchivedMessages(
+                accountPeerId: self.context.account.peerId,
+                peerId: peerId,
+                postbox: self.context.account.postbox,
+                completion: { _ in }
+            )
         }
 
         self.chatDisplayNode.historyNode.experimentalSnapScrollToItem = false
