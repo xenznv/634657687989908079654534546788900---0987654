@@ -16,12 +16,101 @@ import SwiftSignalKit
 // video files; anything bigger keeps the text and is reported to the log.
 private let jerkgramArchiveMaxMediaBytes: Int64 = 25 * 1024 * 1024
 
+// The archive stores non-user chats (groups, channels) under a negative id and
+// reports them back offset by this mark, so they cannot be mistaken for a user
+// id. Real Telegram user ids stay far below it.
+private let jerkgramArchiveNonUserChatMark: Int64 = 1_000_000_000_000
+
+// How many archive chats one launch sync covers. The list arrives newest
+// activity first, so a long-unused chat simply syncs when it is opened.
+private let jerkgramLaunchSyncMaxChats = 30
+
 // Media that could not be fetched right now (network, timeout): the sync mark
 // stays put so the next chat open tries again. Files that can never be used
 // (too large, unreadable) are not listed here, so they do not cause churn.
 private struct JerkgramArchiveMediaResult {
     let mediaByMessageId: [Int32: Media]
     let retryableMessageIds: Set<Int32>
+}
+
+// What one chat sync changed, and which edits it could not apply yet: an edit
+// whose message is not on the device has to be retried, so the sync mark only
+// moves forward once everything landed.
+private struct JerkgramArchiveSyncOutcome {
+    let changed: Int
+    let unappliedEdits: Int
+}
+
+// The stored message with a new attribute and media set, every other property
+// kept exactly as it was.
+private func jerkgramArchiveUpdatedStoreMessage(
+    _ current: StoreMessage,
+    attributes: [MessageAttribute],
+    media: [Media]
+) -> StoreMessage {
+    return StoreMessage(
+        id: current.id,
+        customStableId: nil,
+        globallyUniqueId: current.globallyUniqueId,
+        groupingKey: current.groupingKey,
+        threadId: current.threadId,
+        timestamp: current.timestamp,
+        flags: StoreMessageFlags(current.flags),
+        tags: current.tags,
+        globalTags: current.globalTags,
+        localTags: current.localTags,
+        forwardInfo: current.forwardInfo.flatMap(StoreMessageForwardInfo.init),
+        authorId: current.author?.id,
+        text: current.text,
+        attributes: attributes,
+        media: media
+    )
+}
+
+// The edit history of a message with the archive's edit events merged in: one
+// entry per edit event holding the version that was replaced, oldest first,
+// exactly like a live edit records it (see GhostBaseMessageAttribute).
+// Returns nil when the history already knows every event.
+private func jerkgramArchiveMergedEditHistory(
+    base: GhostBaseMessageAttribute?,
+    edits: [JerkgramArchiveEditedMessage]
+) -> (originalText: String?, texts: [String], dates: [String])? {
+    var texts = base?.editHistoryTexts ?? []
+    var dates = base?.editHistoryDates ?? []
+    var originalText = base?.originalText
+    var added = false
+
+    for edit in edits {
+        guard let oldText = edit.oldText, !oldText.isEmpty else {
+            continue
+        }
+        let dateText = String(Int32((edit.editedAt ?? Date()).timeIntervalSince1970))
+
+        // The app records the same edit live when it was running, so an event
+        // already in the history (same text, same moment) is skipped.
+        let known = texts.count == dates.count && zip(texts, dates).contains(
+            where: { $0.0 == oldText && $0.1 == dateText }
+        )
+        if known {
+            continue
+        }
+
+        texts.append(oldText)
+        dates.append(dateText)
+        if originalText == nil {
+            originalText = oldText
+        }
+        added = true
+    }
+
+    guard added else {
+        return nil
+    }
+    if texts.count > 30 {
+        texts = Array(texts.suffix(30))
+        dates = Array(dates.suffix(30))
+    }
+    return (originalText, texts, dates)
 }
 
 public func jerkgramSyncArchivedMessages(
@@ -55,9 +144,9 @@ public func jerkgramSyncArchivedMessages(
             return
         }
 
-        guard !updates.deleted.isEmpty else {
+        guard !updates.deleted.isEmpty || !updates.edited.isEmpty else {
             JerkgramDebugConsole.log(
-                "archive sync: chat=\(chatId) has no deleted messages"
+                "archive sync: chat=\(chatId) has nothing new"
             )
             JerkgramArchiveSettings.setLastSync(
                 accountPeerId: accountId,
@@ -69,8 +158,17 @@ public func jerkgramSyncArchivedMessages(
         }
 
         JerkgramDebugConsole.log(
-            "archive sync: chat=\(chatId) restoring \(updates.deleted.count) message(s)"
+            "archive sync: chat=\(chatId) restoring \(updates.deleted.count) message(s), \(updates.edited.count) edit(s)"
         )
+
+        // Edit events grouped per message, oldest first: the API answers newest
+        // first, while the stored history lists the replaced versions in order.
+        var editsByMessageId: [Int32: [JerkgramArchiveEditedMessage]] = [:]
+        for edit in updates.edited.sorted(by: { lhs, rhs in
+            (lhs.editedAt ?? Date.distantPast) < (rhs.editedAt ?? Date.distantPast)
+        }) {
+            editsByMessageId[edit.messageId, default: []].append(edit)
+        }
 
         jerkgramDownloadArchivedMedia(
             client: client,
@@ -78,8 +176,10 @@ public func jerkgramSyncArchivedMessages(
             items: updates.deleted
         ) { mediaResult in
             let mediaByMessageId = mediaResult.mediaByMessageId
-            let _ = (postbox.transaction { transaction -> Int in
+            let _ = (postbox.transaction { transaction -> JerkgramArchiveSyncOutcome in
                 var changed = 0
+                var unappliedEdits = 0
+                var pendingEdits = editsByMessageId
 
                 for item in updates.deleted {
                     let messageId = MessageId(
@@ -95,28 +195,37 @@ public func jerkgramSyncArchivedMessages(
                     )
                     let text = item.text ?? ""
                     let archivedMedia = mediaByMessageId[item.messageId]
+                    let archivedEdits = pendingEdits.removeValue(forKey: item.messageId) ?? []
 
                     if let existing = transaction.getMessage(messageId) {
                         // The message is already local (arrived before deletion):
-                        // make sure it carries the deleted mark, and give it the
-                        // archived file when the device never kept one.
+                        // make sure it carries the deleted mark and the archived
+                        // edit history, and give it the archived file when the
+                        // device never kept one.
                         let ghost = existing.attributes.first(
                             where: { $0 is GhostBaseMessageAttribute }
                         ) as? GhostBaseMessageAttribute
+                        let mergedEdits = jerkgramArchiveMergedEditHistory(
+                            base: ghost,
+                            edits: archivedEdits
+                        )
 
                         var attributes = existing.attributes
                         var needsUpdate = false
 
-                        if ghost?.isDeleted != true {
+                        if ghost?.isDeleted != true || mergedEdits != nil {
                             attributes.removeAll(where: { $0 is GhostBaseMessageAttribute })
                             attributes.append(GhostBaseMessageAttribute(
-                                originalText: ghost?.originalText
+                                originalText: mergedEdits?.originalText
+                                    ?? ghost?.originalText
                                     ?? (existing.text.isEmpty ? nil : existing.text),
-                                editHistoryTexts: ghost?.editHistoryTexts ?? [],
-                                editHistoryDates: ghost?.editHistoryDates ?? [],
+                                editHistoryTexts: mergedEdits?.texts ?? ghost?.editHistoryTexts ?? [],
+                                editHistoryDates: mergedEdits?.dates ?? ghost?.editHistoryDates ?? [],
                                 isDeleted: true,
                                 deletedAt: deletedAt,
-                                originalEntities: ghost?.originalEntities ?? []
+                                originalEntities: ghost?.originalEntities ?? [],
+                                editHistoryEntities: ghost?.editHistoryEntities ?? [],
+                                editHistorySnapshots: ghost?.editHistorySnapshots ?? []
                             ))
                             needsUpdate = true
                         }
@@ -129,20 +238,8 @@ public func jerkgramSyncArchivedMessages(
 
                         if needsUpdate {
                             transaction.updateMessage(messageId, update: { current in
-                                return .update(StoreMessage(
-                                    id: current.id,
-                                    customStableId: nil,
-                                    globallyUniqueId: current.globallyUniqueId,
-                                    groupingKey: current.groupingKey,
-                                    threadId: current.threadId,
-                                    timestamp: current.timestamp,
-                                    flags: StoreMessageFlags(current.flags),
-                                    tags: current.tags,
-                                    globalTags: current.globalTags,
-                                    localTags: current.localTags,
-                                    forwardInfo: current.forwardInfo.flatMap(StoreMessageForwardInfo.init),
-                                    authorId: current.author?.id,
-                                    text: current.text,
+                                return .update(jerkgramArchiveUpdatedStoreMessage(
+                                    current,
                                     attributes: attributes,
                                     media: media
                                 ))
@@ -158,12 +255,18 @@ public func jerkgramSyncArchivedMessages(
                             storeFlags.insert(.Incoming)
                         }
 
+                        // An edit made before the deletion is restored with it.
+                        let mergedEdits = jerkgramArchiveMergedEditHistory(
+                            base: nil,
+                            edits: archivedEdits
+                        )
                         let media: [Media] = archivedMedia.map { [$0] } ?? []
                         let attributes: [MessageAttribute] = [
                             GhostBaseMessageAttribute(
-                                originalText: text.isEmpty ? nil : text,
-                                editHistoryTexts: [],
-                                editHistoryDates: [],
+                                originalText: mergedEdits?.originalText
+                                    ?? (text.isEmpty ? nil : text),
+                                editHistoryTexts: mergedEdits?.texts ?? [],
+                                editHistoryDates: mergedEdits?.dates ?? [],
                                 isDeleted: true,
                                 deletedAt: deletedAt
                             )
@@ -198,25 +301,156 @@ public func jerkgramSyncArchivedMessages(
                     }
                 }
 
-                return changed
-            } |> deliverOnMainQueue).start(next: { changed in
-                JerkgramDebugConsole.log(
-                    "archive sync: chat=\(chatId) restored \(changed) message(s)"
+                // Edits of messages that were not deleted: attach the history to
+                // whatever the device holds. A message that is not local yet (the
+                // app may still be catching up with the server) keeps its sync
+                // mark, so the next pass applies the edit instead of losing it.
+                for (pendingMessageId, pendingEditEvents) in pendingEdits {
+                    let id = MessageId(
+                        peerId: peerId,
+                        namespace: Namespaces.Message.Cloud,
+                        id: pendingMessageId
+                    )
+                    guard let existing = transaction.getMessage(id) else {
+                        unappliedEdits += 1
+                        continue
+                    }
+                    let ghost = existing.attributes.first(
+                        where: { $0 is GhostBaseMessageAttribute }
+                    ) as? GhostBaseMessageAttribute
+                    guard let mergedEdits = jerkgramArchiveMergedEditHistory(
+                        base: ghost,
+                        edits: pendingEditEvents
+                    ) else {
+                        continue
+                    }
+
+                    var attributes = existing.attributes
+                    attributes.removeAll(where: { $0 is GhostBaseMessageAttribute })
+                    attributes.append(GhostBaseMessageAttribute(
+                        originalText: mergedEdits.originalText,
+                        editHistoryTexts: mergedEdits.texts,
+                        editHistoryDates: mergedEdits.dates,
+                        isDeleted: ghost?.isDeleted ?? false,
+                        deletedAt: ghost?.deletedAt ?? 0,
+                        originalEntities: ghost?.originalEntities ?? [],
+                        editHistoryEntities: ghost?.editHistoryEntities ?? [],
+                        editHistorySnapshots: ghost?.editHistorySnapshots ?? []
+                    ))
+                    transaction.updateMessage(id, update: { current in
+                        return .update(jerkgramArchiveUpdatedStoreMessage(
+                            current,
+                            attributes: attributes,
+                            media: current.media
+                        ))
+                    })
+                    changed += 1
+                }
+
+                return JerkgramArchiveSyncOutcome(
+                    changed: changed,
+                    unappliedEdits: unappliedEdits
                 )
-                if mediaResult.retryableMessageIds.isEmpty {
+            } |> deliverOnMainQueue).start(next: { outcome in
+                JerkgramDebugConsole.log(
+                    "archive sync: chat=\(chatId) restored \(outcome.changed) message(s)"
+                )
+                if !mediaResult.retryableMessageIds.isEmpty {
+                    JerkgramDebugConsole.log(
+                        "archive sync will retry media for \(mediaResult.retryableMessageIds.count) message(s)"
+                    )
+                }
+                if outcome.unappliedEdits > 0 {
+                    JerkgramDebugConsole.log(
+                        "archive sync will retry \(outcome.unappliedEdits) edit(s) for chat=\(chatId)"
+                    )
+                }
+                if mediaResult.retryableMessageIds.isEmpty && outcome.unappliedEdits == 0 {
                     JerkgramArchiveSettings.setLastSync(
                         accountPeerId: accountId,
                         chatPeerId: chatId,
                         value: updates.serverTime
                     )
-                } else {
-                    JerkgramDebugConsole.log(
-                        "archive sync will retry media for \(mediaResult.retryableMessageIds.count) message(s)"
-                    )
                 }
-                completion(changed)
+                completion(outcome.changed)
             })
         }
+    }
+}
+
+// The same restore, but for every chat the archive knows about, run right after
+// the app becomes usable. Opening a chat still syncs it on its own; this only
+// means the deletions are usually back before the chat is opened at all.
+//
+// The chat list is asked of the archive itself, because the local database only
+// knows what actually reached the device.
+public func jerkgramSyncAllArchivedChats(
+    accountPeerId: PeerId,
+    postbox: Postbox,
+    completion: @escaping (Int) -> Void
+) {
+    guard let client = JerkgramArchiveClient.fromSettings() else {
+        JerkgramDebugConsole.error("archive launch sync: client not configured")
+        completion(0)
+        return
+    }
+
+    client.fetchChats { chats in
+        guard let chats = chats else {
+            JerkgramDebugConsole.error("archive launch sync: no chat list")
+            completion(0)
+            return
+        }
+
+        // The archive is fed by a Telegram Business connection, so its chats
+        // are 1:1 conversations and their ids are CloudUser peers. Anything
+        // else is skipped rather than restored into a made-up chat.
+        var pending: [PeerId] = []
+        var skipped = 0
+        for chat in chats {
+            if let chatType = chat.chatType, chatType != "private" {
+                skipped += 1
+                continue
+            }
+            if chat.chatId >= jerkgramArchiveNonUserChatMark || chat.chatId <= 0 {
+                skipped += 1
+                continue
+            }
+            pending.append(PeerId(
+                namespace: Namespaces.Peer.CloudUser,
+                id: PeerId.Id._internalFromInt64Value(chat.chatId)
+            ))
+        }
+
+        if pending.count > jerkgramLaunchSyncMaxChats {
+            pending = Array(pending.prefix(jerkgramLaunchSyncMaxChats))
+        }
+
+        JerkgramDebugConsole.log(
+            "archive launch sync: \(pending.count) chat(s), \(skipped) skipped"
+        )
+
+        var restored = 0
+        func step() {
+            guard !pending.isEmpty else {
+                JerkgramDebugConsole.log(
+                    "archive launch sync: restored \(restored) message(s) in total"
+                )
+                completion(restored)
+                return
+            }
+            let peerId = pending.removeFirst()
+            jerkgramSyncArchivedMessages(
+                accountPeerId: accountPeerId,
+                peerId: peerId,
+                postbox: postbox,
+                completion: { changed in
+                    restored += changed
+                    step()
+                }
+            )
+        }
+        step()
     }
 }
 

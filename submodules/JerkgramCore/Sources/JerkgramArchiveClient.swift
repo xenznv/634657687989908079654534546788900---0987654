@@ -66,9 +66,23 @@ public final class JerkgramArchiveSettings {
         }
     }
 
-    private static func lastSyncKey(accountPeerId: Int64, chatPeerId: Int64) -> String {
+    // The cursor scheme below changed when edits started being restored: a build
+    // that only knew about deletions moved a chat's mark past edits it ignored,
+    // and nothing would ever ask for them again. Marks are therefore namespaced
+    // per scheme, so a chat without a mark for the current scheme is read once
+    // from the beginning, which is exactly how those edits come back.
+    public static let lastSyncSchemeVersion = 2
+
+    // The mark written by builds before the current scheme, kept only so it can
+    // be cleaned up: it must never be read again.
+    private static func legacyLastSyncKey(accountPeerId: Int64, chatPeerId: Int64) -> String {
         return JerkgramArchiveSettingsKey.lastSyncPrefix
             + "\(accountPeerId).\(chatPeerId)"
+    }
+
+    private static func lastSyncKey(accountPeerId: Int64, chatPeerId: Int64) -> String {
+        return JerkgramArchiveSettingsKey.lastSyncPrefix
+            + "v\(self.lastSyncSchemeVersion).\(accountPeerId).\(chatPeerId)"
     }
 
     public static func lastSync(accountPeerId: Int64, chatPeerId: Int64) -> Int {
@@ -78,6 +92,9 @@ public final class JerkgramArchiveSettings {
     }
 
     public static func setLastSync(accountPeerId: Int64, chatPeerId: Int64, value: Int) {
+        UserDefaults.standard.removeObject(
+            forKey: self.legacyLastSyncKey(accountPeerId: accountPeerId, chatPeerId: chatPeerId)
+        )
         UserDefaults.standard.set(
             value,
             forKey: self.lastSyncKey(accountPeerId: accountPeerId, chatPeerId: chatPeerId)
@@ -124,13 +141,57 @@ public struct JerkgramArchiveDeletedMessage {
     }
 }
 
+// One recorded edit of a message: the text that was replaced and when. Kept as
+// a version list, so a message edited while the app was closed still shows its
+// history the way a live edit does.
+public struct JerkgramArchiveEditedMessage {
+    public let messageId: Int32
+    public let oldText: String?
+    public let newText: String?
+    public let editedAt: Date?
+
+    public init(
+        messageId: Int32,
+        oldText: String?,
+        newText: String?,
+        editedAt: Date?
+    ) {
+        self.messageId = messageId
+        self.oldText = oldText
+        self.newText = newText
+        self.editedAt = editedAt
+    }
+}
+
 public struct JerkgramArchiveUpdates {
     public let serverTime: Int
     public let deleted: [JerkgramArchiveDeletedMessage]
+    public let edited: [JerkgramArchiveEditedMessage]
 
-    public init(serverTime: Int, deleted: [JerkgramArchiveDeletedMessage]) {
+    public init(
+        serverTime: Int,
+        deleted: [JerkgramArchiveDeletedMessage],
+        edited: [JerkgramArchiveEditedMessage] = []
+    ) {
         self.serverTime = serverTime
         self.deleted = deleted
+        self.edited = edited
+    }
+}
+
+// One chat the archive holds messages for. `chatId` uses the same wire
+// encoding the app sends when it asks for updates: a plain Telegram id for a
+// user chat, and an offset value for the chats the archive stores under a
+// negative id (groups and channels).
+public struct JerkgramArchiveChat {
+    public let chatId: Int64
+    public let title: String?
+    public let chatType: String?
+
+    public init(chatId: Int64, title: String?, chatType: String?) {
+        self.chatId = chatId
+        self.title = title
+        self.chatType = chatType
     }
 }
 
@@ -332,6 +393,25 @@ public final class JerkgramArchiveClient {
         }
     }
 
+    /// Lists the chats the archive holds messages for, newest activity first.
+    /// The launch sync uses this to restore every chat without waiting for any
+    /// of them to be opened.
+    public func fetchChats(completion: @escaping ([JerkgramArchiveChat]?) -> Void) {
+        guard let request = self.request(path: "chats", query: []) else {
+            completion(nil)
+            return
+        }
+        self.run(request) { result in
+            switch result {
+            case let .failure(error):
+                JerkgramDebugConsole.log("archive chats request failed: \(error)")
+                completion(nil)
+            case let .success(data):
+                completion(JerkgramArchiveClient.decodeChats(data))
+            }
+        }
+    }
+
     private static func decodeInt64(_ value: Any?) -> Int64? {
         if let value = value as? Int64 {
             return value
@@ -394,6 +474,43 @@ public final class JerkgramArchiveClient {
                 )
             }
         }
-        return JerkgramArchiveUpdates(serverTime: serverTime, deleted: deleted)
+        var edited: [JerkgramArchiveEditedMessage] = []
+        if let rows = json["edited"] as? [[String: Any]] {
+            for row in rows {
+                guard let messageId = row["message_id"] as? Int else {
+                    continue
+                }
+                edited.append(
+                    JerkgramArchiveEditedMessage(
+                        messageId: Int32(messageId),
+                        oldText: row["old_text"] as? String,
+                        newText: row["new_text"] as? String,
+                        editedAt: JerkgramArchiveClient.decodeDate(row["edited_at"])
+                    )
+                )
+            }
+        }
+        return JerkgramArchiveUpdates(serverTime: serverTime, deleted: deleted, edited: edited)
+    }
+
+    private static func decodeChats(_ data: Data) -> [JerkgramArchiveChat]? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let rows = json["chats"] as? [[String: Any]] else {
+            return nil
+        }
+        var chats: [JerkgramArchiveChat] = []
+        for row in rows {
+            guard let chatId = JerkgramArchiveClient.decodeInt64(row["chat_id"]) else {
+                continue
+            }
+            chats.append(
+                JerkgramArchiveChat(
+                    chatId: chatId,
+                    title: row["title"] as? String,
+                    chatType: row["chat_type"] as? String
+                )
+            )
+        }
+        return chats
     }
 }

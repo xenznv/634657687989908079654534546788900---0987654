@@ -547,6 +547,10 @@ final class JerkgramMemorySampler {
     private let context = Promise<AuthorizedApplicationContext?>()
     private let contextDisposable = MetaDisposable()
     
+    // The archive is pulled once per launch, as soon as the account is ready,
+    // so deleted messages are back before any chat is opened.
+    private var jerkgramArchiveLaunchSyncStarted = false
+    
     private var authContextValue: UnauthorizedApplicationContext?
     private let authContext = Promise<UnauthorizedApplicationContext?>()
     private let authContextDisposable = MetaDisposable()
@@ -1704,6 +1708,15 @@ BuildConfig.jerkgramRecordExtensionDiagnostic(
                     self.registerForNotifications(context: context.context, authorize: authorizeNotifications)
                     
                     self.resetIntentsIfNeeded(context: context.context)
+                    
+                    if !self.jerkgramArchiveLaunchSyncStarted {
+                        self.jerkgramArchiveLaunchSyncStarted = true
+                        jerkgramSyncAllArchivedChats(
+                            accountPeerId: context.context.account.peerId,
+                            postbox: context.context.account.postbox,
+                            completion: { _ in }
+                        )
+                    }
                 }))
             } else {
                 self.mainWindow.viewController = nil
