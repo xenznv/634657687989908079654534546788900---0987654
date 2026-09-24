@@ -44,7 +44,7 @@ private struct JerkgramArchiveSyncOutcome {
 // The stored message with a new attribute and media set, every other property
 // kept exactly as it was.
 private func jerkgramArchiveUpdatedStoreMessage(
-    _ current: StoreMessage,
+    _ current: Message,
     attributes: [MessageAttribute],
     media: [Media]
 ) -> StoreMessage {
