@@ -188,7 +188,7 @@ public func jerkgramSyncArchivedMessages(
                             globalTags: globalTags,
                             localTags: LocalMessageTags(),
                             forwardInfo: nil,
-                            authorId: item.senderId.map { PeerId(Namespaces.Peer.CloudUser, PeerId.Id._internalFromInt64Value($0)) },
+                            authorId: item.senderId.map { PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value($0)) },
                             text: text,
                             attributes: attributes,
                             media: media
