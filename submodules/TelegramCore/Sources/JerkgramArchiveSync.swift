@@ -36,8 +36,11 @@ public func jerkgramSyncArchivedMessages(
         return
     }
 
-    let accountId = accountPeerId.toInt64()
-    let chatId = peerId.toInt64()
+    // The archive API speaks raw Telegram ids, not packed PeerId values:
+    // user ids no longer fitting 32 bits arrive distorted via toInt64(),
+    // so the id is taken from the PeerId itself (namespace-free).
+    let accountId = accountPeerId.id._internalGetInt64Value()
+    let chatId = peerId.id._internalGetInt64Value()
     let after = JerkgramArchiveSettings.lastSync(accountPeerId: accountId, chatPeerId: chatId)
     JerkgramDebugConsole.log(
         "archive sync: chat=\(chatId) after=\(after)"
@@ -185,7 +188,7 @@ public func jerkgramSyncArchivedMessages(
                             globalTags: globalTags,
                             localTags: LocalMessageTags(),
                             forwardInfo: nil,
-                            authorId: item.senderId.flatMap { PeerId($0) },
+                            authorId: item.senderId.map { PeerId(Namespaces.Peer.CloudUser, PeerId.Id._internalFromInt64Value($0)) },
                             text: text,
                             attributes: attributes,
                             media: media
