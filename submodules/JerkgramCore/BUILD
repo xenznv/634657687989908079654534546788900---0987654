@@ -5,5 +5,6 @@ swift_library(
     module_name = "JerkgramCore",
     srcs = glob(["Sources/**/*.swift"]),
     copts = ["-warnings-as-errors"],
+    deps = ["//submodules/BuildConfig:BuildConfig"],
     visibility = ["//visibility:public"],
 )

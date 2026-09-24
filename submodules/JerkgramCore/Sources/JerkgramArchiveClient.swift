@@ -1,4 +1,5 @@
 import Foundation
+import BuildConfig
 
 // Client for the external archive API served by the message saver bot.
 // Read-only: lists deleted/edited messages that the
@@ -12,9 +13,16 @@ public enum JerkgramArchiveSettingsKey {
 }
 
 public final class JerkgramArchiveSettings {
+    // The archive is wired into the build by default (URL and token come from
+    // build-time configuration); UserDefaults only ever overrides it.
     public static var serverURL: String {
         get {
-            return (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.serverURL) ?? "")
+            let stored = (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.serverURL) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if !stored.isEmpty {
+                return stored
+            }
+            return BuildConfig.jerkgramArchiveURL()
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
         set {
@@ -27,7 +35,12 @@ public final class JerkgramArchiveSettings {
 
     public static var token: String {
         get {
-            return (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.token) ?? "")
+            let stored = (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.token) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if !stored.isEmpty {
+                return stored
+            }
+            return BuildConfig.jerkgramArchiveToken()
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
         set {

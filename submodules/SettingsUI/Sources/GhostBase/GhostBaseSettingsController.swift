@@ -841,7 +841,6 @@ enum GhostBaseSettingsPage: Equatable {
     case debugResearch
     case about
     case debugConsole
-    case archiveServer
 
     var title: String {
         switch self {
@@ -871,8 +870,6 @@ enum GhostBaseSettingsPage: Equatable {
             return "About"
         case .debugConsole:
             return "Debug Console"
-        case .archiveServer:
-            return "Archive Server"
         }
     }
 
@@ -905,8 +902,6 @@ enum GhostBaseSettingsPage: Equatable {
             return strings.about
         case .debugConsole:
             return strings.debugConsole
-        case .archiveServer:
-            return strings.archiveServer
         }
     }
 }
@@ -2004,8 +1999,7 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
             .disclosureDetail(2, 3, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
             .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home),
-            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole),
-            .disclosureDetail(2, 6, strings.archiveServer, strings.archiveServerHint, "", .archiveServer)
+            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
         ]
     }
 
@@ -2032,21 +2026,6 @@ private func ghostBaseSettingsEntries(
             .toggle(1, 41, GhostBaseKey.messageCharacterCount, strings.messageCharacterCount, state.messageCharacterCount),
             .toggle(1, 42, GhostBaseKey.hideOwnPhone, strings.hideMyPhone, state.hideOwnPhone),
             .info(1, strings.hidePhoneHint)
-        ]
-    }
-
-    if page == .archiveServer {
-        let url = JerkgramArchiveSettings.serverURL
-        let hasToken = !JerkgramArchiveSettings.token.isEmpty
-        let status = JerkgramArchiveSettings.status
-        return [
-            .header(0, strings.archiveServerConnection),
-            .actionValue(0, 1, strings.archiveServerURL, url.isEmpty ? strings.archiveServerNotSet : url, "archive.editURL"),
-            .actionValue(0, 2, strings.archiveServerToken, hasToken ? strings.archiveServerConfigured : strings.archiveServerNotSet, "archive.editToken"),
-            .actionValue(0, 3, strings.archiveServerTest, "", "archive.test"),
-            .header(1, strings.archiveServerStatusHeader),
-            .researchInfo(1, 1, status.isEmpty ? strings.archiveServerStatusIdle : status),
-            .info(2, strings.archiveServerHintBody)
         ]
     }
 
@@ -2637,71 +2616,6 @@ public func ghostBaseSettingsController(
     )
 }
 
-private final class JerkgramArchiveValueEditorArguments {
-    let update: (String) -> Void
-    let commit: () -> Void
-
-    init(update: @escaping (String) -> Void, commit: @escaping () -> Void) {
-        self.update = update
-        self.commit = commit
-    }
-}
-
-private enum JerkgramArchiveValueEditorEntry: ItemListNodeEntry {
-    case input(sectionId: ItemListSectionId, value: String, secure: Bool)
-
-    var section: ItemListSectionId {
-        switch self {
-        case let .input(sectionId, _, _):
-            return sectionId
-        }
-    }
-
-    var stableId: Int32 {
-        switch self {
-        case .input:
-            return 0
-        }
-    }
-
-    static func ==(lhs: JerkgramArchiveValueEditorEntry, rhs: JerkgramArchiveValueEditorEntry) -> Bool {
-        switch lhs {
-        case let .input(_, lhsValue, lhsSecure):
-            if case let .input(_, rhsValue, rhsSecure) = rhs {
-                return lhsValue == rhsValue && lhsSecure == rhsSecure
-            }
-            return false
-        }
-    }
-
-    static func <(lhs: JerkgramArchiveValueEditorEntry, rhs: JerkgramArchiveValueEditorEntry) -> Bool {
-        return lhs.stableId < rhs.stableId
-    }
-
-    func item(presentationData: ItemListPresentationData, arguments: Any) -> ListViewItem {
-        let arguments = arguments as! JerkgramArchiveValueEditorArguments
-        switch self {
-        case let .input(_, value, secure):
-            return ItemListSingleLineInputItem(
-                presentationData: presentationData,
-                systemStyle: .glass,
-                title: NSAttributedString(),
-                text: value,
-                placeholder: "",
-                type: secure ? .password : .regular(capitalization: false, autocorrection: false),
-                returnKeyType: .done,
-                alignment: .default,
-                spacing: 0.0,
-                clearType: .none,
-                maxLength: 0,
-                sectionId: self.section,
-                textUpdated: { arguments.update($0) },
-                action: {}
-            )
-        }
-    }
-}
-
 private final class GhostBaseSendStylePageArguments {
     let select: (String) -> Void
 
@@ -2927,61 +2841,6 @@ func ghostBaseSettingsPageController(
 
     let refreshResearchPage: () -> Void = {
         statePromise.set(stateValue.with { $0 })
-    }
-
-    // Archive server text editors (URL / token) and the connection test.
-    // A plain UIAlertController cannot be presented through the fork's
-    // ViewController.present(_:in:), so the editor is a small list screen with
-    // one input item, pushed like every other settings page.
-    func presentArchiveValueEditor(
-        _ title: String,
-        _ value: String,
-        _ secure: Bool,
-        commit: @escaping (String) -> Void
-    ) {
-        var draftValue = value
-        let arguments = JerkgramArchiveValueEditorArguments(
-            update: { draft in
-                draftValue = draft
-            },
-            commit: {
-                commit(draftValue)
-            }
-        )
-
-        let signal = context.sharedContext.presentationData
-            |> map { presentationData -> (ItemListControllerState, (ItemListNodeState, Any)) in
-                let controllerState = ItemListControllerState(
-                    presentationData: ItemListPresentationData(presentationData),
-                    title: .text(title),
-                    leftNavigationButton: nil,
-                    rightNavigationButton: ItemListNavigationButton(
-                        content: .text(presentationData.strings.Common_Done),
-                        style: .bold,
-                        enabled: true,
-                        action: {
-                            arguments.commit()
-                        }
-                    ),
-                    backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Cancel)
-                )
-                let listState = ItemListNodeState(
-                    presentationData: ItemListPresentationData(presentationData),
-                    entries: [
-                        JerkgramArchiveValueEditorEntry.input(
-                            sectionId: 0,
-                            value: draftValue,
-                            secure: secure
-                        )
-                    ],
-                    style: .blocks,
-                    animateChanges: false
-                )
-                return (controllerState, (listState, arguments as Any))
-            }
-
-        let controller = ItemListController(context: context, state: signal)
-        pushController?(controller)
     }
 
     let runHiddenGiftsProbe: (
@@ -3373,41 +3232,6 @@ func ghostBaseSettingsPageController(
         },
         runResearchAction: { action in
             switch action {
-            case "archive.editURL":
-                let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
-                presentArchiveValueEditor(strings.archiveServerURL, JerkgramArchiveSettings.serverURL, false, commit: { value in
-                    JerkgramArchiveSettings.serverURL = value
-                    refreshResearchPage()
-                })
-
-            case "archive.editToken":
-                let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
-                presentArchiveValueEditor(strings.archiveServerToken, JerkgramArchiveSettings.token, true, commit: { value in
-                    JerkgramArchiveSettings.token = value
-                    refreshResearchPage()
-                })
-
-            case "archive.test":
-                let strings = context.sharedContext.currentPresentationData.with { $0 }.strings.jerkgram
-                guard let client = JerkgramArchiveClient.fromSettings() else {
-                    JerkgramArchiveSettings.status = strings.archiveServerStatusNotConfigured
-                    refreshResearchPage()
-                    break
-                }
-                JerkgramArchiveSettings.status = strings.archiveServerStatusTesting
-                refreshResearchPage()
-                client.fetchMessageCount { result in
-                    DispatchQueue.main.async {
-                        switch result {
-                        case let .success(count):
-                            JerkgramArchiveSettings.status = strings.archiveServerStatusOK(count)
-                        case let .failure(error):
-                            JerkgramArchiveSettings.status = strings.archiveServerStatusFailed("\(error)")
-                        }
-                        refreshResearchPage()
-                    }
-                }
-
             case "copyExtensionDiagnostics":
                 UIPasteboard.general.string = BuildConfig.jerkgramExtensionDiagnosticsReport()
 

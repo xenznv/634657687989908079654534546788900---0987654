@@ -112,6 +112,8 @@ jobs:
         env:
           JKG_API_ID: ${{ secrets.JKG_API_ID }}
           JKG_API_HASH: ${{ secrets.JKG_API_HASH }}
+          JKG_ARCHIVE_URL: ${{ secrets.JKG_ARCHIVE_URL }}
+          JKG_ARCHIVE_TOKEN: ${{ secrets.JKG_ARCHIVE_TOKEN }}
         run: |
           if [ -z "$JKG_API_ID" ] || [ -z "$JKG_API_HASH" ]; then
             echo "::error::Missing secrets JKG_API_ID / JKG_API_HASH."
@@ -133,7 +135,9 @@ jobs:
               "app_specific_url_scheme": "tg",
               "premium_iap_product_id": "",
               "enable_siri": False,
-              "enable_icloud": False
+              "enable_icloud": False,
+              "archive_url": os.environ.get("JKG_ARCHIVE_URL", ""),
+              "archive_token": os.environ.get("JKG_ARCHIVE_TOKEN", "")
           }
           with open('build-input/ci-configuration.json', 'w') as f:
               json.dump(cfg, f, indent='\t')

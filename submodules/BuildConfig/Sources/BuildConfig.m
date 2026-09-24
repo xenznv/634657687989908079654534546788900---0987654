@@ -576,6 +576,21 @@ static NSString *JerkgramResolvedDiagnosticsGroup(void) {
     [json writeToURL:fileURL options:NSDataWritingAtomic error:nil];
 }
 
+#ifndef JKG_ARCHIVE_URL
+#define JKG_ARCHIVE_URL @""
+#endif
+#ifndef JKG_ARCHIVE_TOKEN
+#define JKG_ARCHIVE_TOKEN @""
+#endif
+
++ (NSString *)jerkgramArchiveURL {
+    return JKG_ARCHIVE_URL;
+}
+
++ (NSString *)jerkgramArchiveToken {
+    return JKG_ARCHIVE_TOKEN;
+}
+
 + (NSString *)jerkgramExtensionDiagnosticsReport {
     NSString *group = JerkgramResolvedDiagnosticsGroup();
     NSURL *container = [NSFileManager.defaultManager containerURLForSecurityApplicationGroupIdentifier:group];

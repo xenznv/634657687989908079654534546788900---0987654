@@ -42,7 +42,6 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.mediaAndStories, strings.mediaAndStoriesHint, strings.mediaAndStoriesHint, "media stories one time", .mediaStories)
     add(strings.dataAndBackup, strings.dataAndBackupHint, strings.dataAndBackupHint, "data backup retention archive", .dataAndBackup)
     add(strings.debugConsole, strings.debugConsoleHint, strings.debugConsoleHint, "debug console log crash diagnostics errors events", .debugConsole)
-    add(strings.archiveServer, strings.archiveServerHint, strings.archiveServerHint, "archive server bot url token deleted messages restore", .archiveServer)
 
     // Basic Functions
     add(strings.profileCard, "Show ID, DC and registration date in profiles", "Показывать ID, DC и дату регистрации в профилях", "profile information id dc", .home)
@@ -126,8 +125,6 @@ private func jerkgramSearchLocalizedPageTitle(page: GhostBaseSettingsPage, strin
         return strings.dataAndBackup
     case .debugConsole:
         return strings.debugConsole
-    case .archiveServer:
-        return strings.archiveServer
     default:
         return strings.settingsTitle
     }

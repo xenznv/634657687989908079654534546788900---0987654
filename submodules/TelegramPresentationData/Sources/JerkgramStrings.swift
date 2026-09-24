@@ -966,60 +966,6 @@ public extension JerkgramStrings {
 
 
 public extension JerkgramStrings {
-    // MARK: Archive Server (external bot archive)
-
-    var archiveServer: String {
-        self.languageCode == "ru" ? "Сервер архива" : "Archive Server"
-    }
-    var archiveServerHint: String {
-        self.languageCode == "ru" ? "Удалённые сообщения из архива бота" : "Deleted messages from the bot archive"
-    }
-    var archiveServerConnection: String {
-        self.languageCode == "ru" ? "Подключение" : "Connection"
-    }
-    var archiveServerURL: String {
-        self.languageCode == "ru" ? "Адрес сервера" : "Server URL"
-    }
-    var archiveServerToken: String {
-        self.languageCode == "ru" ? "Токен" : "Token"
-    }
-    var archiveServerNotSet: String {
-        self.languageCode == "ru" ? "Не задан" : "Not set"
-    }
-    var archiveServerConfigured: String {
-        self.languageCode == "ru" ? "Задан" : "Configured"
-    }
-    var archiveServerTest: String {
-        self.languageCode == "ru" ? "Проверить соединение" : "Test Connection"
-    }
-    var archiveServerStatusHeader: String {
-        self.languageCode == "ru" ? "Статус" : "Status"
-    }
-    var archiveServerStatusIdle: String {
-        self.languageCode == "ru" ? "Ещё не проверялся." : "Not checked yet."
-    }
-    var archiveServerStatusNotConfigured: String {
-        self.languageCode == "ru"
-            ? "Укажите адрес сервера и токен, чтобы включить синхронизацию архива."
-            : "Set the server URL and token to enable archive sync."
-    }
-    var archiveServerStatusTesting: String {
-        self.languageCode == "ru" ? "Проверяем соединение…" : "Checking connection…"
-    }
-    func archiveServerStatusOK(_ count: Int) -> String {
-        self.languageCode == "ru"
-            ? "Соединение есть. Сообщений в архиве: \(count)"
-            : "Connected. Messages in the archive: \(count)"
-    }
-    func archiveServerStatusFailed(_ message: String) -> String {
-        self.languageCode == "ru" ? "Ошибка: \(message)" : "Failed: \(message)"
-    }
-    var archiveServerHintBody: String {
-        self.languageCode == "ru"
-            ? "Удалённые сообщения из архива бота подтягиваются при открытии чата: они появляются на своём месте и остаются в переписке, даже если Telegram их уже не отдаёт."
-            : "Deleted messages from the bot archive are pulled when you open a chat: they appear in place and stay in the conversation even after Telegram stops serving them."
-    }
-
     var build119Summary: String {
         self.languageCode == "ru"
             ? "Build 119 · Official Telegram 12.9.2"
