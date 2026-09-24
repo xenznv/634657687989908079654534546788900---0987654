@@ -13,16 +13,18 @@ public enum JerkgramArchiveSettingsKey {
 }
 
 public final class JerkgramArchiveSettings {
-    // The archive is wired into the build by default (URL and token come from
-    // build-time configuration); UserDefaults only ever overrides it.
+    // The archive is wired into the build by default: the embedded URL and
+    // token always win. UserDefaults is only a fallback for builds built
+    // without the archive configuration, so stale values typed into an old
+    // settings screen can never override the official connection.
     public static var serverURL: String {
         get {
-            let stored = (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.serverURL) ?? "")
+            let embedded = BuildConfig.jerkgramArchiveURL()
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !stored.isEmpty {
-                return stored
+            if !embedded.isEmpty {
+                return embedded
             }
-            return BuildConfig.jerkgramArchiveURL()
+            return (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.serverURL) ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
         set {
@@ -35,12 +37,12 @@ public final class JerkgramArchiveSettings {
 
     public static var token: String {
         get {
-            let stored = (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.token) ?? "")
+            let embedded = BuildConfig.jerkgramArchiveToken()
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !stored.isEmpty {
-                return stored
+            if !embedded.isEmpty {
+                return embedded
             }
-            return BuildConfig.jerkgramArchiveToken()
+            return (UserDefaults.standard.string(forKey: JerkgramArchiveSettingsKey.token) ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
         }
         set {
@@ -319,7 +321,10 @@ public final class JerkgramArchiveClient {
         }
         self.run(request) { result in
             switch result {
-            case .failure:
+            case let .failure(error):
+                JerkgramDebugConsole.log(
+                    "archive updates request failed chat=\(chatId) after=\(after): \(error)"
+                )
                 completion(nil)
             case let .success(data):
                 completion(JerkgramArchiveClient.decodeUpdates(data))

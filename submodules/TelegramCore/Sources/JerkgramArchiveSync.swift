@@ -31,6 +31,7 @@ public func jerkgramSyncArchivedMessages(
     completion: @escaping (Int) -> Void
 ) {
     guard let client = JerkgramArchiveClient.fromSettings() else {
+        JerkgramDebugConsole.error("archive sync: client not configured")
         completion(0)
         return
     }
@@ -38,14 +39,23 @@ public func jerkgramSyncArchivedMessages(
     let accountId = accountPeerId.toInt64()
     let chatId = peerId.toInt64()
     let after = JerkgramArchiveSettings.lastSync(accountPeerId: accountId, chatPeerId: chatId)
+    JerkgramDebugConsole.log(
+        "archive sync: chat=\(chatId) after=\(after)"
+    )
 
     client.fetchUpdates(chatId: chatId, after: after) { updates in
         guard let updates = updates else {
+            JerkgramDebugConsole.error(
+                "archive sync: no response for chat=\(chatId)"
+            )
             completion(0)
             return
         }
 
         guard !updates.deleted.isEmpty else {
+            JerkgramDebugConsole.log(
+                "archive sync: chat=\(chatId) has no deleted messages"
+            )
             JerkgramArchiveSettings.setLastSync(
                 accountPeerId: accountId,
                 chatPeerId: chatId,
@@ -54,6 +64,10 @@ public func jerkgramSyncArchivedMessages(
             completion(0)
             return
         }
+
+        JerkgramDebugConsole.log(
+            "archive sync: chat=\(chatId) restoring \(updates.deleted.count) message(s)"
+        )
 
         jerkgramDownloadArchivedMedia(
             client: client,
@@ -183,6 +197,9 @@ public func jerkgramSyncArchivedMessages(
 
                 return changed
             } |> deliverOnMainQueue).start(next: { changed in
+                JerkgramDebugConsole.log(
+                    "archive sync: chat=\(chatId) restored \(changed) message(s)"
+                )
                 if mediaResult.retryableMessageIds.isEmpty {
                     JerkgramArchiveSettings.setLastSync(
                         accountPeerId: accountId,
