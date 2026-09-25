@@ -70,7 +70,7 @@ public func jerkgramSpoofController(context: AccountContext) -> ViewController {
                     returnKeyType: .done,
                     alignment: .right,
                     spacing: 16.0,
-                    clearType: .never,
+                    clearType: .none,
                     maxLength: 12,
                     sectionId: self.section,
                     textUpdated: { updatedText in
