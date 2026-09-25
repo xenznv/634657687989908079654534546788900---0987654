@@ -10,7 +10,6 @@ import CoreLocation
 
 public func jerkgramSpoofController(context: AccountContext) -> ViewController {
     let initialState = JerkgramSpoofController.shared.currentState
-    let stateValue = Atomic(value: initialState)
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
 
     let modes: [JerkgramSpoofMode] = [.session, .persistent]
@@ -63,7 +62,7 @@ public func jerkgramSpoofController(context: AccountContext) -> ViewController {
                 )
             case let .input(_, _, title, text, action):
                 return ItemListSingleLineInputItem(
-                    presentationData: presentationData,
+                    presentationData: presentationData, systemStyle: .glass,
                     title: NSAttributedString(string: title, textColor: presentationData.theme.list.itemPrimaryTextColor),
                     text: text,
                     placeholder: "0.0",
@@ -74,11 +73,10 @@ public func jerkgramSpoofController(context: AccountContext) -> ViewController {
                     clearType: .never,
                     maxLength: 12,
                     sectionId: self.section,
-                    style: .blocks,
                     textUpdated: { updatedText in
                         arguments.action(action + ":" + updatedText)
                     },
-                    shouldUpdateText: { _ in true }
+                    action: {}
                 )
             case let .action(_, _, title, value, action):
                 return ItemListDisclosureItem(

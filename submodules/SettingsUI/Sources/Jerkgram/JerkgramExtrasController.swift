@@ -6,13 +6,18 @@ import ItemListUI
 import AccountContext
 import JerkgramCore
 
+private struct JerkgramExtrasUIState: Equatable {
+    var sanitization: Bool
+    var anonymize: Bool
+}
+
 public func jerkgramExtrasController(context: AccountContext) -> ViewController {
-    var initialSettings: (sanitization: Bool, anonymize: Bool) = (
-        JerkgramExtrasSettings.metadataSanitizationEnabled,
-        JerkgramExtrasSettings.anonymizeFileNamesEnabled
+    let initialState = JerkgramExtrasUIState(
+        sanitization: JerkgramExtrasSettings.metadataSanitizationEnabled,
+        anonymize: JerkgramExtrasSettings.anonymizeFileNamesEnabled
     )
-    let stateValue = Atomic(value: initialSettings)
-    let statePromise = ValuePromise(initialSettings, ignoreRepeated: true)
+    let stateValue = Atomic(value: initialState)
+    let statePromise = ValuePromise(initialState, ignoreRepeated: true)
 
     final class Arguments {
         let toggle: (String, Bool) -> Void
@@ -62,7 +67,7 @@ public func jerkgramExtrasController(context: AccountContext) -> ViewController 
         }
     }
 
-    func entries(state: (sanitization: Bool, anonymize: Bool), strings: JerkgramStrings) -> [Entry] {
+    func entries(state: JerkgramExtrasUIState, strings: JerkgramStrings) -> [Entry] {
         return [
             .header(0, strings.extrasMetadataSection),
             .toggle(0, 1, strings.extrasMetadataToggle, "sanitize", state.sanitization),
@@ -73,7 +78,6 @@ public func jerkgramExtrasController(context: AccountContext) -> ViewController 
         ]
     }
 
-    var controller: ItemListController?
     let arguments = Arguments(toggle: { action, value in
         let updated = stateValue.modify { current in
             var current = current
@@ -86,7 +90,6 @@ public func jerkgramExtrasController(context: AccountContext) -> ViewController 
             }
             return current
         }
-        initialSettings = updated
         statePromise.set(updated)
     })
 
@@ -108,6 +111,5 @@ public func jerkgramExtrasController(context: AccountContext) -> ViewController 
             ), arguments as Any)
         )
     }
-    controller = ItemListController(context: context, state: signal)
-    return controller!
+    return ItemListController(context: context, state: signal)
 }
