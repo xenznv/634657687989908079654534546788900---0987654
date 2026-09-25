@@ -41,7 +41,7 @@ public enum JerkgramExtrasSettings {
         guard anonymizeFileNamesEnabled, let name else {
             return name
         }
-        let trimmed = name.trimmingWhitespace()
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             return name
         }
@@ -62,11 +62,5 @@ public enum JerkgramExtrasSettings {
             return "file." + trimmed[trimmed.index(after: dotIndex)...]
         }
         return "file"
-    }
-}
-
-extension String {
-    fileprivate func trimWhitespace() -> String {
-        return self.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

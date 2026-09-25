@@ -128,8 +128,8 @@ public final class JerkgramSpoofController {
         )
     }
 
-    public func applyCoordinate(_ coordinate: CLLocationCoordinate2D?) -> CLLocationCoordinate2D? {
-        guard let coordinate, let spoof = self.activeSpoof() else {
+    public func applyCoordinate(_ coordinate: CLLocationCoordinate2D) -> CLLocationCoordinate2D {
+        guard let spoof = self.activeSpoof() else {
             return coordinate
         }
         return CLLocationCoordinate2D(latitude: spoof.latitude, longitude: spoof.longitude)
