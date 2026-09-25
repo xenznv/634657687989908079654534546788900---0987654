@@ -549,7 +549,6 @@ public final class LocationMapNode: ASDisplayNode, MKMapViewDelegateTarget {
         }
         if let spoofed = JerkgramSpoofController.shared.apply(location) {
             location = spoofed
-            userLocation.coordinate = spoofed.coordinate
         }
         userLocation.title = ""
         self.locationPromise.set(.single(location))
