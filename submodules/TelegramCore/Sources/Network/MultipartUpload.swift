@@ -411,9 +411,10 @@ private func jerkgramSanitizedUploadSource(_ source: MultipartUploadSource, post
     let completeData = postbox.mediaBox.resourceData(reference.resource, option: .incremental(waitUntilFetchStatus: true))
         |> filter { $0.complete }
         |> take(1)
+        |> map { Optional($0) }
         |> timeout(90.0, queue: Queue.concurrentDefaultQueue(), alternate: .single(nil))
     return completeData
-        |> mapToSignal { resourceData -> Signal<MultipartUploadSource, NoError> in
+        |> mapToSignal { (resourceData: MediaResourceData?) -> Signal<MultipartUploadSource, NoError> in
             guard let resourceData, resourceData.size > 0, resourceData.size < 256 * 1024 * 1024 else {
                 return .single(source)
             }
