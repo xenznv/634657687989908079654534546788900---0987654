@@ -41,6 +41,10 @@ private func jerkgramSearchRegistry(strings: JerkgramStrings) -> [JerkgramSearch
     add(strings.protectedContent, strings.protectedContentHint, strings.protectedContentHint, "protected screenshot save copy forward", .protectedContent)
     add(strings.mediaAndStories, strings.mediaAndStoriesHint, strings.mediaAndStoriesHint, "media stories one time", .mediaStories)
     add(strings.dataAndBackup, strings.dataAndBackupHint, strings.dataAndBackupHint, "data backup retention archive", .dataAndBackup)
+    add(strings.spoof, strings.spoofHint, "Подмена GPS-локации для карт и live location", "spoof gps location fake геолокация спуф подмена координаты", .spoof)
+    add(strings.extras, strings.extrasHint, "Стирание метаданных и приватные мелочи", "extras metadata exif gps strip sanitiz метаданные фото стереть", .extras)
+    add(strings.extrasMetadataToggle, strings.extrasMetadataHint, "Удалять EXIF/GPS и прочие метаданные перед отправкой", "strip metadata exif gps icc отправка метаданные", .extras)
+    add(strings.extrasAnonymizeNames, "Replace attachment names with generic ones", "Обезличивать имена вложений", "file name anonymize img_1234 имя файла", .extras)
     add(strings.debugConsole, strings.debugConsoleHint, strings.debugConsoleHint, "debug console log crash diagnostics errors events", .debugConsole)
 
     // Basic Functions
@@ -123,6 +127,10 @@ private func jerkgramSearchLocalizedPageTitle(page: GhostBaseSettingsPage, strin
         return strings.mediaAndStories
     case .dataAndBackup:
         return strings.dataAndBackup
+    case .spoof:
+        return strings.spoof
+    case .extras:
+        return strings.extras
     case .debugConsole:
         return strings.debugConsole
     default:
@@ -568,6 +576,10 @@ public func jerkgramSettingsSearchController(
             target = jerkgramDataAndBackupController(context: context)
         case .stars:
             target = jerkgramStarsEditorController(context: context)
+        case .spoof:
+            target = jerkgramSpoofController(context: context)
+        case .extras:
+            target = jerkgramExtrasController(context: context)
         default:
             target = ghostBaseSettingsPageController(context: context, page: page)
         }

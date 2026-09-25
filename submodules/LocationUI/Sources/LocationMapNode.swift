@@ -4,6 +4,7 @@ import AsyncDisplayKit
 import Display
 import SwiftSignalKit
 import MapKit
+import JerkgramCore
 
 private let pinOffset = CGPoint(x: 0.0, y: 33.0)
 
@@ -543,8 +544,12 @@ public final class LocationMapNode: ASDisplayNode, MKMapViewDelegateTarget {
     }
     
     public func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation) {
-        guard let location = userLocation.location else {
+        guard var location = userLocation.location else {
             return
+        }
+        if let spoofed = JerkgramSpoofController.shared.apply(location) {
+            location = spoofed
+            userLocation.coordinate = spoofed.coordinate
         }
         userLocation.title = ""
         self.locationPromise.set(.single(location))

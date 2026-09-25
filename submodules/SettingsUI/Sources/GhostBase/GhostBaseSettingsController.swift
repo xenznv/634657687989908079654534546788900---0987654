@@ -832,6 +832,8 @@ enum GhostBaseSettingsPage: Equatable {
     case search
     case dataAndBackup
     case stars
+    case spoof
+    case extras
     case home
     case ghostMode
     case messages
@@ -852,6 +854,10 @@ enum GhostBaseSettingsPage: Equatable {
             return "Data and Backup"
         case .stars:
             return "Stars"
+        case .spoof:
+            return "Spoof"
+        case .extras:
+            return "Extras"
         case .home:
             return "Info Display"
         case .ghostMode:
@@ -882,6 +888,10 @@ enum GhostBaseSettingsPage: Equatable {
             return strings.searchSettings
         case .dataAndBackup:
             return strings.dataAndBackup
+        case .spoof:
+            return strings.spoof
+        case .extras:
+            return strings.extras
         case .stars:
             return strings.starsBalance
         case .home:
@@ -1997,9 +2007,11 @@ private func ghostBaseSettingsEntries(
             .disclosureDetail(2, 0, strings.searchSettings, strings.searchSettingsHint, "", .search),
             .disclosureDetail(2, 1, strings.messages, strings.messagesHint, "", .messages),
             .disclosureDetail(2, 2, strings.ghostMode, strings.ghostModeHint, "", .ghostMode),
-            .disclosureDetail(2, 3, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
-            .disclosureDetail(2, 4, strings.infoDisplay, strings.infoDisplayHint, "", .home),
-            .disclosureDetail(2, 5, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
+            .disclosureDetail(2, 3, strings.spoof, strings.spoofHint, "", .spoof),
+            .disclosureDetail(2, 4, strings.extras, strings.extrasHint, "", .extras),
+            .disclosureDetail(2, 5, strings.protectedContent, strings.protectedContentHint, "", .protectedContent),
+            .disclosureDetail(2, 6, strings.infoDisplay, strings.infoDisplayHint, "", .home),
+            .disclosureDetail(2, 7, strings.debugConsole, strings.debugConsoleHint, "", .debugConsole)
         ]
     }
 
@@ -3778,6 +3790,10 @@ func ghostBaseSettingsPageController(
             pushController?(jerkgramStarsEditorController(context: context))
         } else if selectedPage == .search {
             pushController?(jerkgramSettingsSearchController(context: context))
+        } else if selectedPage == .spoof {
+            pushController?(jerkgramSpoofController(context: context))
+        } else if selectedPage == .extras {
+            pushController?(jerkgramExtrasController(context: context))
         } else {
             pushController?(
                 ghostBaseSettingsPageController(

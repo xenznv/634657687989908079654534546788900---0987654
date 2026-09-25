@@ -5,6 +5,7 @@ import SwiftSignalKit
 import MtProtoKit
 import CryptoUtils
 import ManagedFile
+import JerkgramCore
 
 private typealias SignalKitTimer = SwiftSignalKit.Timer
 
@@ -398,16 +399,70 @@ public enum MultipartUploadSource {
     case tempFile(TempBoxFile)
 }
 
+// Jerkgram: strips outbound metadata (EXIF/GPS, ICC, XMP, MP4 udta, PDF
+// metadata, Office docProps) before any bytes leave the app. Reads the full
+// resource into memory, sanitizes, writes to a TempBox file and returns the
+// sanitized source. On any parsing failure the original source is returned
+// (sanitize must never block a send).
+private func jerkgramSanitizedUploadSource(_ source: MultipartUploadSource, postbox: Postbox) -> Signal<MultipartUploadSource, NoError> {
+    guard case let .resource(reference) = source, JerkgramExtrasSettings.metadataSanitizationEnabled else {
+        return .single(source)
+    }
+    let completeData = postbox.mediaBox.resourceData(reference.resource, option: .incremental(waitUntilFetchStatus: true))
+        |> filter { $0.complete }
+        |> take(1)
+        |> timeout(90.0, queue: Queue.concurrentDefaultQueue(), alternate: .single(nil))
+    return completeData
+        |> mapToSignal { resourceData -> Signal<MultipartUploadSource, NoError> in
+            guard let resourceData, resourceData.size > 0, resourceData.size < 256 * 1024 * 1024 else {
+                return .single(source)
+            }
+            return Signal { subscriber in
+                Queue.concurrentDefaultQueue().async {
+                    let fileURL = URL(fileURLWithPath: resourceData.path)
+                    guard let data = try? Data(contentsOf: fileURL, options: .mappedIfSafe) else {
+                        subscriber.putNext(source)
+                        subscriber.putCompletion()
+                        return
+                    }
+                    let (sanitized, report) = jerkgramSanitizeUploadData(data, fileNameHint: nil)
+                    let changed = report?.changed ?? false
+                    if let report {
+                        JerkgramDebugConsole.shared.log("sanitize: \(report.format) \(report.originalSize) -> \(report.outputSize) bytes")
+                    }
+                    if !changed {
+                        subscriber.putNext(source)
+                        subscriber.putCompletion()
+                        return
+                    }
+                    let tempFile = TempBox.shared.tempFile(fileName: "jerkgram-sanitized")
+                    do {
+                        try sanitized.write(to: URL(fileURLWithPath: tempFile.path), options: .atomic)
+                        subscriber.putNext(.tempFile(tempFile))
+                        subscriber.putCompletion()
+                    } catch {
+                        TempBox.shared.dispose(tempFile)
+                        subscriber.putNext(source)
+                        subscriber.putCompletion()
+                    }
+                }
+                return EmptyDisposable
+            }
+        }
+}
+
+private enum UploadInterface {
+    case download(Download)
+    case multiplexed(manager: MultiplexedRequestManager, datacenterId: Int, consumerId: Int64)
+}
+
 enum MultipartUploadError {
     case generic
 }
 
 func multipartUpload(network: Network, postbox: Postbox, source: MultipartUploadSource, encrypt: Bool, tag: MediaResourceFetchTag?, hintFileSize: Int64?, hintFileIsLarge: Bool, forceNoBigParts: Bool, useLargerParts: Bool = false, increaseParallelParts: Bool = false, useMultiplexedRequests: Bool = true, useCompression: Bool = false) -> Signal<MultipartUploadResult, MultipartUploadError> {
-    enum UploadInterface {
-        case download(Download)
-        case multiplexed(manager: MultiplexedRequestManager, datacenterId: Int, consumerId: Int64)
-    }
-    
+    return jerkgramSanitizedUploadSource(source, postbox: postbox)
+        |> mapToSignalPromotingError { (source: MultipartUploadSource) -> Signal<MultipartUploadResult, MultipartUploadError> in
     let uploadInterface: Signal<UploadInterface, NoError>
     if useMultiplexedRequests {
         uploadInterface = .single(.multiplexed(manager: network.multiplexedRequestManager, datacenterId: network.datacenterId, consumerId: Int64.random(in: Int64.min ... Int64.max)))
@@ -536,6 +591,7 @@ func multipartUpload(network: Network, postbox: Postbox, source: MultipartUpload
                 manager.cancel()
                 fetchedResourceDisposable.dispose()
             }
+        }
         }
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import CoreLocation
 import SwiftSignalKit
+import JerkgramCore
 
 public enum DeviceLocationMode: Int32 {
     case preciseForeground = 0
@@ -146,8 +147,9 @@ extension DeviceLocationManager: CLLocationManagerDelegate {
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         assert(self.queue.isCurrent())
         
-        if let location = locations.first {
+        if var location = locations.first {
             if self.currentTopMode != nil {
+                location = JerkgramSpoofController.shared.apply(location) ?? location
                 self.currentLocation = location
                 for subscriber in self.subscribers {
                     subscriber.update(location, self.currentHeading?.effectiveHeading)
@@ -161,7 +163,8 @@ extension DeviceLocationManager: CLLocationManagerDelegate {
         
         if self.currentTopMode != nil {
             self.currentHeading = newHeading
-            if let currentLocation = self.currentLocation {
+            if var currentLocation = self.currentLocation {
+                currentLocation = JerkgramSpoofController.shared.apply(currentLocation) ?? currentLocation
                 for subscriber in self.subscribers {
                     subscriber.update(currentLocation, newHeading.effectiveHeading)
                 }

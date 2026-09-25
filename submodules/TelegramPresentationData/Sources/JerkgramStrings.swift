@@ -10,6 +10,8 @@ public enum JerkgramStringKey: String, CaseIterable {
     case searchSettings
     case searchSettingsHint
     case searchNothingFound
+    case spoof
+    case extras
     case basicFunctions
     case infoDisplay
     case bypassAll
@@ -32,6 +34,23 @@ public enum JerkgramStringKey: String, CaseIterable {
     case debugConsoleClear
     case debugConsoleEmpty
 
+    case spoofHint
+    case extrasHint
+    case spoofSection
+    case spoofEnabled
+    case spoofLatitude
+    case spoofLongitude
+    case spoofMode
+    case spoofModeSession
+    case spoofModePersistent
+    case spoofActiveHint
+    case spoofStop
+    case extrasMetadataSection
+    case extrasMetadataToggle
+    case extrasAnonymizeNames
+    case extrasMetadataHint
+    case extrasPrioritySection
+    case extrasPriorityHint
     case basicFunctionsHint
     case infoDisplayHint
     case ghostModeHint
@@ -242,6 +261,8 @@ public struct JerkgramStrings {
     public var searchSettings: String { self.text(.searchSettings) }
     public var searchSettingsHint: String { self.text(.searchSettingsHint) }
     public var searchNothingFound: String { self.text(.searchNothingFound) }
+    public var spoof: String { self.text(.spoof) }
+    public var extras: String { self.text(.extras) }
     public var basicFunctions: String { self.text(.basicFunctions) }
     public var infoDisplay: String { self.text(.infoDisplay) }
     public var infoDisplayHint: String { self.text(.infoDisplayHint) }
@@ -265,6 +286,23 @@ public struct JerkgramStrings {
     public var debugConsoleClear: String { self.text(.debugConsoleClear) }
     public var debugConsoleEmpty: String { self.text(.debugConsoleEmpty) }
 
+    public var spoofHint: String { self.text(.spoofHint) }
+    public var extrasHint: String { self.text(.extrasHint) }
+    public var spoofSection: String { self.text(.spoofSection) }
+    public var spoofEnabled: String { self.text(.spoofEnabled) }
+    public var spoofLatitude: String { self.text(.spoofLatitude) }
+    public var spoofLongitude: String { self.text(.spoofLongitude) }
+    public var spoofMode: String { self.text(.spoofMode) }
+    public var spoofModeSession: String { self.text(.spoofModeSession) }
+    public var spoofModePersistent: String { self.text(.spoofModePersistent) }
+    public var spoofActiveHint: String { self.text(.spoofActiveHint) }
+    public var spoofStop: String { self.text(.spoofStop) }
+    public var extrasMetadataSection: String { self.text(.extrasMetadataSection) }
+    public var extrasMetadataToggle: String { self.text(.extrasMetadataToggle) }
+    public var extrasAnonymizeNames: String { self.text(.extrasAnonymizeNames) }
+    public var extrasMetadataHint: String { self.text(.extrasMetadataHint) }
+    public var extrasPrioritySection: String { self.text(.extrasPrioritySection) }
+    public var extrasPriorityHint: String { self.text(.extrasPriorityHint) }
     public var basicFunctionsHint: String { self.text(.basicFunctionsHint) }
     public var ghostModeHint: String { self.text(.ghostModeHint) }
     public var messagesHint: String { self.text(.messagesHint) }
@@ -552,6 +590,25 @@ public struct JerkgramStrings {
         .debugResearch: "Debug / Research",
         .about: "About",
 
+        .spoof: "Spoof",
+        .extras: "Extras",
+        .spoofHint: "Fake GPS location for maps and live location",
+        .extrasHint: "Metadata stripping and privacy extras",
+        .spoofSection: "Location Spoofing",
+        .spoofEnabled: "Enable Location Spoof",
+        .spoofLatitude: "Latitude",
+        .spoofLongitude: "Longitude",
+        .spoofMode: "Mode",
+        .spoofModeSession: "Session",
+        .spoofModePersistent: "Persistent",
+        .spoofActiveHint: "Spoof is active: location fixes are replaced with the chosen point. Session mode resets on app restart.",
+        .spoofStop: "Stop Spoofing",
+        .extrasMetadataSection: "Outgoing Metadata",
+        .extrasMetadataToggle: "Strip Metadata Before Sending",
+        .extrasAnonymizeNames: "Anonymize File Names",
+        .extrasMetadataHint: "Removes EXIF/GPS, ICC profiles, XMP and other metadata from photos, videos, PDF and Office documents before they are uploaded.",
+        .extrasPrioritySection: "Notes",
+        .extrasPriorityHint: "If a file cannot be processed it is sent unchanged.",
         .basicFunctionsHint: "Profile info, stars, backup",
         .ghostModeHint: "Hide online, reads and typing",
         .messagesHint: "Deleted, edited, cache",
