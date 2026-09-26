@@ -550,6 +550,7 @@ final class JerkgramMemorySampler {
     // The archive is pulled once per launch, as soon as the account is ready,
     // so deleted messages are back before any chat is opened.
     private var jerkgramArchiveLaunchSyncStarted = false
+    private var jerkgramSessionSpoofProxyApplied = false
     
     private var authContextValue: UnauthorizedApplicationContext?
     private let authContext = Promise<UnauthorizedApplicationContext?>()
@@ -1708,6 +1709,14 @@ BuildConfig.jerkgramRecordExtensionDiagnostic(
                     self.registerForNotifications(context: context.context, authorize: authorizeNotifications)
                     
                     self.resetIntentsIfNeeded(context: context.context)
+                    
+                    // Jerkgram session spoof: re-assert the spoof proxy so
+                    // traffic (re)connects through it, keeping the session's
+                    // country consistent with the chosen exit node.
+                    if !self.jerkgramSessionSpoofProxyApplied {
+                        self.jerkgramSessionSpoofProxyApplied = true
+                        let _ = jerkgramApplySessionSpoofProxy(accountManager: context.context.sharedContext.accountManager).start()
+                    }
                     
                     if !self.jerkgramArchiveLaunchSyncStarted {
                         self.jerkgramArchiveLaunchSyncStarted = true

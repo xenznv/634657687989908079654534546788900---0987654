@@ -45,6 +45,19 @@ public enum JerkgramStringKey: String, CaseIterable {
     case spoofModePersistent
     case spoofActiveHint
     case spoofStop
+    case spoofChooseOnMap
+    case spoofSessionSection
+    case spoofSessionToggle
+    case spoofSessionType
+    case spoofSessionSocks5
+    case spoofSessionMtproto
+    case spoofSessionHost
+    case spoofSessionPort
+    case spoofSessionSecret
+    case spoofSessionUsername
+    case spoofSessionPassword
+    case spoofSessionApply
+    case spoofSessionHint
     case extrasMetadataSection
     case extrasMetadataToggle
     case extrasAnonymizeNames
@@ -297,6 +310,19 @@ public struct JerkgramStrings {
     public var spoofModePersistent: String { self.text(.spoofModePersistent) }
     public var spoofActiveHint: String { self.text(.spoofActiveHint) }
     public var spoofStop: String { self.text(.spoofStop) }
+    public var spoofChooseOnMap: String { self.text(.spoofChooseOnMap) }
+    public var spoofSessionSection: String { self.text(.spoofSessionSection) }
+    public var spoofSessionToggle: String { self.text(.spoofSessionToggle) }
+    public var spoofSessionType: String { self.text(.spoofSessionType) }
+    public var spoofSessionSocks5: String { self.text(.spoofSessionSocks5) }
+    public var spoofSessionMtproto: String { self.text(.spoofSessionMtproto) }
+    public var spoofSessionHost: String { self.text(.spoofSessionHost) }
+    public var spoofSessionPort: String { self.text(.spoofSessionPort) }
+    public var spoofSessionSecret: String { self.text(.spoofSessionSecret) }
+    public var spoofSessionUsername: String { self.text(.spoofSessionUsername) }
+    public var spoofSessionPassword: String { self.text(.spoofSessionPassword) }
+    public var spoofSessionApply: String { self.text(.spoofSessionApply) }
+    public var spoofSessionHint: String { self.text(.spoofSessionHint) }
     public var extrasMetadataSection: String { self.text(.extrasMetadataSection) }
     public var extrasMetadataToggle: String { self.text(.extrasMetadataToggle) }
     public var extrasAnonymizeNames: String { self.text(.extrasAnonymizeNames) }
@@ -603,6 +629,19 @@ public struct JerkgramStrings {
         .spoofModePersistent: "Persistent",
         .spoofActiveHint: "Spoof is active: location fixes are replaced with the chosen point. Session mode resets on app restart.",
         .spoofStop: "Stop Spoofing",
+        .spoofChooseOnMap: "Choose Point on Map",
+        .spoofSessionSection: "Session Spoof (Proxy)",
+        .spoofSessionToggle: "Session Appears From Proxy",
+        .spoofSessionType: "Proxy Type",
+        .spoofSessionSocks5: "SOCKS5",
+        .spoofSessionMtproto: "MTProto",
+        .spoofSessionHost: "Host",
+        .spoofSessionPort: "Port",
+        .spoofSessionSecret: "Secret",
+        .spoofSessionUsername: "Username",
+        .spoofSessionPassword: "Password",
+        .spoofSessionApply: "Apply Proxy Now",
+        .spoofSessionHint: "Routes account traffic through the proxy, so the session list shows the proxy's country. The proxy must be applied before logging in for a new session to appear from it.",
         .extrasMetadataSection: "Outgoing Metadata",
         .extrasMetadataToggle: "Strip Metadata Before Sending",
         .extrasAnonymizeNames: "Anonymize File Names",

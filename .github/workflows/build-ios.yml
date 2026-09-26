@@ -197,7 +197,7 @@ jobs:
             build \
             --configurationPath build-input/ci-configuration.json \
             --codesigningInformationPath build-input/fake-codesigning \
-            --buildNumber 141 \
+            --buildNumber 142 \
             --configuration "${{ inputs.configuration || 'release_arm64' }}" \
             --outputBuildArtifactsPath build/artifacts
 
